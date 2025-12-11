@@ -5,7 +5,7 @@
         <group name="prj301">
             <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MoblieCardStore/web/WEB-INF/web.xml</file>
             <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MoblieCardStore/web/index.html</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MoblieCardStore/src/java/DAO/DBConnection.java</file>
+            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MoblieCardStore/src/java/dao/DBConnection.java</file>
             <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MoblieCardStore/web/index_1.html</file>
             <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MoblieCardStore/web/META-INF/context.xml</file>
         </group>

@@ -1,4 +1,4 @@
-package Models;
+package models;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
