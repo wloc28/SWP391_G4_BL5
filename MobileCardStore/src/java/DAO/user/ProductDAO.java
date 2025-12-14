@@ -3,6 +3,7 @@ package DAO.user;
 import DAO.DBConnection;
 import Models.Product;
 import Models.Provider;
+import Models.ProductWithStock;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +11,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 
 /**
  * ProductDAO - Data Access Object for Products
@@ -309,5 +313,76 @@ public class ProductDAO {
         
         return product;
     }
+
+
+    /*HomePage*/
+    public Map<Provider, List<ProductWithStock>> getProductsGroupedByProvider() throws SQLException {
+        Map<Provider, List<ProductWithStock>> result = new LinkedHashMap<>();
+
+        String sql = """
+            SELECT 
+                p.product_id, p.product_name, p.price, p.description, p.image_url,
+                pr.provider_id, pr.provider_name, pr.provider_type, pr.image_url AS provider_image_url,
+                (SELECT COUNT(*) FROM product_storage ps 
+                 WHERE ps.product_id = p.product_id 
+                 AND ps.status = 'AVAILABLE' 
+                 AND ps.is_deleted = 0) AS available_count
+            FROM products p
+            JOIN providers pr ON p.provider_id = pr.provider_id
+            WHERE p.status = 'ACTIVE' AND p.is_deleted = 0
+              AND pr.status = 'ACTIVE' AND pr.is_deleted = 0
+            ORDER BY FIELD(pr.provider_type, 'TEL', 'GAME'), pr.provider_name, p.price ASC
+            """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs. next()) {
+                // Extract provider info
+                int providerId = rs.getInt("provider_id");
+                String providerName = rs.getString("provider_name");
+                String providerType = rs.getString("provider_type");
+                String providerImageUrl = rs.getString("provider_image_url");
+
+                // Find or create provider key in map
+                Provider providerKey = null;
+                for (Provider p : result.keySet()) {
+                    if (p.getProviderId() == providerId) {
+                        providerKey = p;
+                        break;
+                    }
+                }
+
+                if (providerKey == null) {
+                    providerKey = new Provider();
+                    providerKey.setProviderId(providerId);
+                    providerKey.setProviderName(providerName);
+                    providerKey.setProviderType(providerType);
+                    providerKey.setImageUrl(providerImageUrl);
+                    result.put(providerKey, new ArrayList<>());
+                }
+
+                // Create ProductWithStock
+                ProductWithStock product = new ProductWithStock();
+                product.setProductId(rs.getInt("product_id"));
+                product.setProductName(rs.getString("product_name"));
+                product.setPrice(rs.getBigDecimal("price"));
+                product.setDescription(rs.getString("description"));
+                product.setImageUrl(rs.getString("image_url"));
+                product.setProviderId(providerId);
+                product.setProviderName(providerName);
+                product.setProviderType(providerType);
+                product.setProviderImageUrl(providerImageUrl);
+                product.setAvailableCount(rs.getInt("available_count"));
+
+                // Add to provider's product list
+                result.get(providerKey).add(product);
+            }
+        }
+
+        return result;
+    }
+
 }
 
