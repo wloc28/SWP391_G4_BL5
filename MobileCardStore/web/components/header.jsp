@@ -180,8 +180,8 @@
     document.addEventListener('click', function (event) {
         var myDiv = document.getElementById('searchform');
 
-        // Ki?m tra n?u s? ki?n click không n?m trong th? div
-        if (!myDiv.contains(event.target)) {
+        // Ki?m tra n?u s? ki?n click khï¿½ng n?m trong th? div
+        if (myDiv && !myDiv.contains(event.target)) {
             hideResult1();
         }
     });

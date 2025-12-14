@@ -1,4 +1,5 @@
 /MobileCardStore/nbproject/private/
+
 /MobileCardStore/build/
 /MobileCardStore/dist/
 /MobileCardStore/target/
@@ -32,3 +33,7 @@ context.xml
 *.bak
 swp_card_store.sql
 swp_card_store.txt
+
+/MobileCardStore/dist/
+/MobileCardStore/build/
+
