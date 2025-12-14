@@ -19,8 +19,8 @@
     <form action="register" method="post">
         <input type="hidden" name="redirect" value="${param.redirect}"/>
         <div class="form-group">
-            <label for="email">Email:</label>
-            <input oninput="msgEmail()" type="email" value="${param.email}" name="email" class="form-control" id="email" placeholder="Enter email" required>
+            <label for="modal_email">Email:</label>
+            <input oninput="msgEmail()" type="email" value="${param.email}" name="email" class="form-control" id="modal_email" placeholder="Enter email" required>
             <p class="text-danger" id="msg_email"></p>
         </div>
         <br>
@@ -34,8 +34,8 @@
         </div>
         <br>
         <div class="form-group">
-            <label for="fullname">Full Name:</label>
-            <input type="text" pattern="[^\d]+" title="Fullname not contain number" value="${param.name}" name="fullname" class="form-control" id="fullname" placeholder="Enter full name" required>
+            <label for="modal_fullname">Full Name:</label>
+            <input type="text" pattern="[^\d]+" title="Fullname not contain number" value="${param.name}" name="fullname" class="form-control" id="modal_fullname" placeholder="Enter full name" required>
         </div>
         <br> 
         <div class="form-group">
@@ -45,8 +45,8 @@
         </div>
         <br>
         <div class="form-group">
-            <label for="mobile">Mobile:</label>
-            <input type="tel" pattern="[0-9]*" title="Enter character [0-9]" name="mobile" value="${param.mobile}" class="form-control" id="mobile" placeholder="Enter mobile number" required>
+            <label for="modal_mobile">Mobile:</label>
+            <input type="tel" pattern="[0-9]*" title="Enter character [0-9]" name="mobile" value="${param.mobile}" class="form-control" id="modal_mobile" placeholder="Enter mobile number" required>
         </div>
         <br>
         <div class="d-flex justify-content-center p-2">
@@ -70,7 +70,7 @@
             }
         }
         function msgEmail() {
-            var email = document.getElementById("email").value;
+            var email = document.getElementById("modal_email").value;
             $.ajax({
                 type: "GET",
                 url: "registercheck",

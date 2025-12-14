@@ -7,6 +7,7 @@
 
 <!--<script src="../dist/js/bootstrap.bundle.min.js"/>--> 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src ="js/index.js"></script>
-<link href="css/index.css" rel="stylesheet"/>
+<!-- Removed non-existent files to avoid 404 errors -->
+<!--<script src ="js/index.js"></script>-->
+<!--<link href="css/index.css" rel="stylesheet"/>-->
 <%@include file="alert.jsp" %>
