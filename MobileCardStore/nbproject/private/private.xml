@@ -2,24 +2,38 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="prj301">
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/Transaction.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/dao/user/CustomerLogin.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/controller/admin/HomeServlet.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/dao/DBConnection.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/Voucher.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/Provider.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/controller/user/LoginServlet.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/Product.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/DAO/admin/AdminLogin.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/PaymentGatewayTransaction.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/ProductStorage.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/Order.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/User.java</file>
-            <file>file:/D:/SWP391_MoblieCard/SWP391_G4_BL5/MobileCardStore/src/java/models/Feedback.java</file>
-        </group>
         <group>
             <file>file:/Users/dotritrong/Desktop/SWP391_G4_BL5/MobileCardStore/src/java/DAO/DBConnection.java</file>
+        </group>
+        <group name="prj301">
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/authentication_controller/LogoutController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/Home.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/controller/admin/ProductStorageController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/ViewProducts.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/controller/user/viewProfile.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/AdminDashboard.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/UpdateProfile.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/controller/admin/AdminDashboardController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/Models/User.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/user/RegisterDAO.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/admin/ProductDAO.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/DBConnection.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/user/CustomerLogin.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/components/header_v2.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/ManageStorage.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/ManageProducts.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/components/header.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/ViewProfile.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/controller/admin/ProductController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/view/ProductDetail.jsp</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/web/WEB-INF/web.xml</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/user/daoUser.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/admin/AdminDashboardDAO.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/DAO/admin/ProductStorageDAO.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/authentication_controller/LoginController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/controller/user/UpdateProfileController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/authentication_controller/RegisterController.java</file>
+            <file>file:/D:/SWP391_G4_BL5/SWP391_G4_BL5/MobileCardStore/src/java/authentication_controller/AuthFilter.java</file>
         </group>
     </open-files>
 </project-private>
