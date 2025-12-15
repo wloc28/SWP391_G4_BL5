@@ -65,6 +65,9 @@ public class AdminDashboardController extends HttpServlet {
             int totalUsers = 0;
             int totalProducts = 0;
             int totalOrders = 0;
+            int totalVouchers = 0;
+            int activeVouchers = 0;
+            int expiringSoonVouchers = 0;
             BigDecimal totalRevenue = BigDecimal.ZERO;
             BigDecimal monthlyRevenue = BigDecimal.ZERO;
             int newUsersThisMonth = 0;
@@ -123,10 +126,31 @@ public class AdminDashboardController extends HttpServlet {
                 System.err.println("Error getting recentOrders: " + e.getMessage());
             }
             
+            try {
+                totalVouchers = dashboardDAO.getTotalVouchers();
+            } catch (Exception e) {
+                System.err.println("Error getting totalVouchers: " + e.getMessage());
+            }
+            
+            try {
+                activeVouchers = dashboardDAO.getActiveVouchers();
+            } catch (Exception e) {
+                System.err.println("Error getting activeVouchers: " + e.getMessage());
+            }
+            
+            try {
+                expiringSoonVouchers = dashboardDAO.getExpiringSoonVouchers();
+            } catch (Exception e) {
+                System.err.println("Error getting expiringSoonVouchers: " + e.getMessage());
+            }
+            
             // Set attributes
             request.setAttribute("totalUsers", totalUsers);
             request.setAttribute("totalProducts", totalProducts);
             request.setAttribute("totalOrders", totalOrders);
+            request.setAttribute("totalVouchers", totalVouchers);
+            request.setAttribute("activeVouchers", activeVouchers);
+            request.setAttribute("expiringSoonVouchers", expiringSoonVouchers);
             request.setAttribute("totalRevenue", totalRevenue);
             request.setAttribute("monthlyRevenue", monthlyRevenue);
             request.setAttribute("newUsersThisMonth", newUsersThisMonth);
