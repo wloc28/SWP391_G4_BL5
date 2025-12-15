@@ -30,6 +30,12 @@ public class AuthFilter implements Filter {
         String contextPath = httpRequest.getContextPath();
         String path = requestURI.substring(contextPath.length());
         
+        // Tạm thời bỏ qua auth cho toàn bộ admin (yêu cầu user -> bỏ login)
+        if (path.startsWith("/admin/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
         // Cho phép truy cập trang login, register, logout mà không cần session
         if (path.equals("/view/login.jsp") || 
             path.equals("/login") ||
