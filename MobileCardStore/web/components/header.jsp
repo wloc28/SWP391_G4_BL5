@@ -1,9 +1,9 @@
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 
-
-<c:if test="${sessionScope.info.role == 1 or sessionScope.info == null}">
+<c:if test="${sessionScope.info.role == 'CUSTOMER' or sessionScope.info == null}">
 <header class="p-3 bg-dark text-white">
     <div class="container">
         <div class="d-flex flex-wrap justify-content-between ">
@@ -85,7 +85,7 @@
     </div>
 </header>
 </c:if>
-<c:if test="${sessionScope.info.role >= 2}">
+<c:if test="${sessionScope.info.role == 'ADMIN'}">
     <header class="p-3 text-white" style="background-color: #51585e">
         <div class="container">
             <div class="d-flex flex-wrap justify-content-between ">
@@ -96,7 +96,7 @@
                             <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
                         </a></li>
                     <li><a href="home" class="nav-link px-2 text-primary fw-bold">Home</a></li>
-                    <c:if test="${sessionScope.info.role == 2}">
+                    <c:if test="${sessionScope.info.role == 'ADMIN'}">
                     <li><a href="ulist" class="nav-link px-2 text-white fw-bold">Account</a></li>
                     </c:if>
                     <li><a href="pklist" class="nav-link px-2 text-white fw-bold">Price package</a></li>

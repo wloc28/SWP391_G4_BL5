@@ -5,17 +5,12 @@
  */
 package DAO.user;
 
-/**
- *
- * @author Dell XPS
- */
-public class CustomerLogin {
-    
 
-package dao.user;
 
-import dao.DBConnection;
-import models.User;
+
+
+import DAO.DBConnection;
+import Models.User;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

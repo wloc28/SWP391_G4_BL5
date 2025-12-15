@@ -9,20 +9,20 @@
     <%@include file="../components/libs.jsp" %>
     <style>
         /* Hero Section */
-        . hero-section {
+        .hero-section {
             background:  linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             color: white;
             padding: 60px 0;
             margin-bottom: 40px;
         }
 
-        . hero-section h1 {
+        .hero-section h1 {
             font-size:  2.5rem;
             font-weight: 700;
             margin-bottom: 15px;
         }
 
-        . hero-section p {
+        .hero-section p {
             font-size: 1.2rem;
             opacity: 0.9;
         }
@@ -39,7 +39,7 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        .provider-card . card-body {
+        .provider-card.card-body {
             text-align: center;
             padding: 20px;
         }
@@ -69,7 +69,7 @@
         }
 
         /* Product Cards */
-        . product-card {
+        .product-card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             height: 100%;
         }
@@ -90,27 +90,27 @@
             flex-direction: column;
         }
 
-        .product-card . card-title {
+        .product-card.card-title {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 8px;
         }
 
-        . product-price {
+        .product-price {
             font-size: 1.25rem;
             font-weight: 700;
             color:  #212529;
         }
 
-        . stock-badge {
+        .stock-badge {
             font-size: 0.8rem;
         }
 
-        . out-of-stock {
+        .out-of-stock {
             opacity: 0.6;
         }
 
-        . out-of-stock . btn {
+        .out-of-stock.btn {
             pointer-events: none;
         }
 
@@ -127,7 +127,7 @@
             margin-bottom: 50px;
         }
 
-        . provider-section-header {
+        .provider-section-header {
             display:  flex;
             align-items: center;
             margin-bottom: 20px;
