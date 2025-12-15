@@ -41,7 +41,7 @@
                         </div>
                         
                         <div class="text-center">
-                            <p class="mb-1">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/view/register.jsp">Đăng ký ngay</a></p>
+                            <p class="mb-1">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký ngay</a></p>
                             <p><a href="forgotpassword">Quên mật khẩu?</a></p>
                         </div>
                     </form>
