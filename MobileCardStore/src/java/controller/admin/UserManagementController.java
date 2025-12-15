@@ -7,6 +7,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -125,6 +126,19 @@ public class UserManagementController extends HttpServlet {
         }
         try {
             int userId = Integer.parseInt(idStr);
+
+            // Ngăn không cho admin tự khoá chính mình
+            HttpSession session = request.getSession(false);
+            User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+            if ("BANNED".equalsIgnoreCase(newStatus) && currentUser != null && currentUser.getUserId() == userId) {
+                String redirect = request.getParameter("redirect");
+                String base = "detail".equalsIgnoreCase(redirect)
+                        ? request.getContextPath() + "/admin/user-detail?id=" + userId
+                        : request.getContextPath() + "/admin/users";
+                response.sendRedirect(base + (base.contains("?") ? "&" : "?") + "selfBan=true");
+                return;
+            }
+
             userDAO.updateStatus(userId, newStatus);
             // redirect back to detail if coming from detail page
             String redirect = request.getParameter("redirect");

@@ -140,6 +140,15 @@
         </div>
 
         <%@include file="../components/footer.jsp" %>
+        <c:if test="${param.selfBan == 'true'}">
+            <script>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không thể khoá tài khoản của chính bạn',
+                    confirmButtonText: 'OK'
+                });
+            </script>
+        </c:if>
     </body>
 </html>
 
