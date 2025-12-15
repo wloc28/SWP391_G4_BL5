@@ -493,6 +493,12 @@
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
+                        <a href="${pageContext.request.contextPath}/vlist">
+                            <i class="bi bi-ticket-perforated"></i>
+                            <span>Quản lý Voucher</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
                         <a href="sliderslist">
                             <i class="bi bi-cart"></i>
                             <span>Quản lý đơn hàng</span>
@@ -552,6 +558,26 @@
                         </div>
                         <div class="stat-card-footer">
                             Tháng này: <fmt:formatNumber value="${monthlyRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Tổng số Voucher</div>
+                            <i class="bi bi-ticket-perforated stat-card-icon" style="color: #ff6b6b;"></i>
+                        </div>
+                        <div class="stat-card-value">
+                            <fmt:formatNumber value="${totalVouchers}" pattern="#,###" />
+                        </div>
+                        <div class="stat-card-footer">
+                            <c:choose>
+                                <c:when test="${expiringSoonVouchers > 0}">
+                                    <i class="bi bi-exclamation-triangle" style="color: #ffc107;"></i> ${activeVouchers} đang hoạt động, ${expiringSoonVouchers} sắp hết hạn
+                                </c:when>
+                                <c:otherwise>
+                                    ${activeVouchers} voucher đang hoạt động
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
                 </div>

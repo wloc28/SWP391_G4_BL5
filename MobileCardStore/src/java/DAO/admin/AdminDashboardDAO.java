@@ -150,6 +150,60 @@ public class AdminDashboardDAO {
     }
     
     /**
+     * Lấy tổng số voucher (không bị xóa)
+     */
+    public int getTotalVouchers() throws SQLException {
+        String sql = "SELECT COUNT(*) as total FROM vouchers WHERE is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+            return 0;
+        }
+    }
+    
+    /**
+     * Lấy số voucher đang hoạt động (ACTIVE)
+     */
+    public int getActiveVouchers() throws SQLException {
+        String sql = "SELECT COUNT(*) as total FROM vouchers WHERE status = 'ACTIVE' AND is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+            return 0;
+        }
+    }
+    
+    /**
+     * Lấy số voucher sắp hết hạn (trong 7 ngày tới)
+     */
+    public int getExpiringSoonVouchers() throws SQLException {
+        String sql = "SELECT COUNT(*) as total FROM vouchers " +
+                     "WHERE expiry_date IS NOT NULL " +
+                     "AND expiry_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY) " +
+                     "AND status = 'ACTIVE' AND is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+            return 0;
+        }
+    }
+    
+    /**
      * Lấy danh sách đơn hàng gần đây
      */
     public List<Order> getRecentOrders(int limit) throws SQLException {
