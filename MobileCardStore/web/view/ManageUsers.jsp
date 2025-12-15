@@ -64,7 +64,7 @@
                                 <input type="hidden" name="page" value="1" id="pageInput">
                                 <div class="d-grid gap-2">
                                     <button class="btn btn-dark" type="submit">Tìm kiếm</button>
-                                    <a class="btn btn-outline-secondary" href="admin/users">Reset</a>
+                                    <a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/admin/users">Reset</a>
                                 </div>
                             </form>
                         </div>
@@ -183,6 +183,15 @@
                 document.getElementById('filterForm').submit();
             }
         </script>
+        <c:if test="${param.selfBan == 'true'}">
+            <script>
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không thể khoá tài khoản của chính bạn',
+                    confirmButtonText: 'OK'
+                });
+            </script>
+        </c:if>
     </body>
 </html>
 
