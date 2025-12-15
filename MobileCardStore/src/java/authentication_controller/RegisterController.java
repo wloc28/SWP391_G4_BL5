@@ -6,8 +6,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import dao.user.RegisterDAO;
-import models.User;
+import DAO.user.RegisterDAO;
+import Models.User;
 
 /**
  * Register Controller - Xử lý đăng ký user

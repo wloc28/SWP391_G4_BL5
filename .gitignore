@@ -1,3 +1,39 @@
 /MobileCardStore/nbproject/private/
+
+/MobileCardStore/build/
+/MobileCardStore/dist/
+/MobileCardStore/target/
+/MobileCardStore/out/
+
+# IDE files
+.idea/
+*.iml
+/MobileCardStore/nbproject/private/
+/MobileCardStore/nbproject/build-impl.xml
+/MobileCardStore/nbproject/genfiles.properties
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Database credentials (if you store them in files)
+db.properties
+context.xml
+
+# Temporary files
+*.tmp
+*.bak
+swp_card_store.sql
+swp_card_store.txt
+
 /MobileCardStore/dist/
 /MobileCardStore/build/
+

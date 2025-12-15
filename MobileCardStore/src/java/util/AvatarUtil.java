@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public class AvatarUtil {
     
-    // Map mã số với URL avatar
+  
     private static final Map<String, String> AVATAR_MAP = new HashMap<>();
     
     // Avatar mặc định
