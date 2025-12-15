@@ -26,9 +26,9 @@
     <c:if test="${sessionScope.info == null and sessionScope.user == null}">
         <div class="text-end">
             <!-- Login Button -->
-            <button type="button" class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#popupLogin">
+            <a href="${pageContext.request.contextPath}/login" class="btn btn-outline-light me-2">
                 Đăng nhập
-            </button>
+            </a>
             <c:if test="${requestScope.page != 1}">
                 <div class="modal fade" id="popupLogin" tabindex="-1" aria-labelledby="popupLoginLabel" aria-hidden="true">
                     <div class="modal-dialog">
@@ -46,24 +46,9 @@
             </c:if>
 
             <!-- Register Button -->
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#popupRegister">
+            <a href="${pageContext.request.contextPath}/register" class="btn btn-warning">
                 Đăng ký
-            </button>
-            <c:if test="${requestScope.page != 1}">
-                <div class="modal fade" id="popupRegister" tabindex="-1" aria-labelledby="popupRegisterLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content" style="background-color: #e9ecef">
-                            <div class="modal-header">
-                                <h2>Đăng ký</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <%@include file="registerForm.jsp" %>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </c:if>
+            </a>
         </div>
         </c:if>
 

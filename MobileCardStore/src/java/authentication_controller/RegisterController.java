@@ -6,8 +6,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import DAO.user.RegisterDAO;
 import Models.User;
+import util.OTPGenerator;
+import util.EmailService;
 
 /**
  * Register Controller - Xử lý đăng ký user
@@ -24,6 +27,31 @@ public class RegisterController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+
+        String action = request.getParameter("action");
+        if (action == null || action.trim().isEmpty()) {
+            action = "sendOTP"; // Mặc định lần đầu submit form là gửi OTP đăng ký
+        }
+
+        switch (action) {
+            case "sendOTP":
+                handleSendOTP(request, response);
+                break;
+            case "verifyOTP":
+                handleVerifyOTP(request, response);
+                break;
+            default:
+                handleSendOTP(request, response);
+        }
+    }
+
+    /**
+     * Bước 1: Nhận thông tin đăng ký, validate, gửi OTP tới email và chuyển sang verify-otp
+     */
+    private void handleSendOTP(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
         // Lấy thông tin từ form
         String email = request.getParameter("email");
         String password = request.getParameter("password");
@@ -112,8 +140,8 @@ public class RegisterController extends HttpServlet {
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
             return;
         }
-        
-        // Tạo User object
+
+        // Tạo User object lưu tạm trong session, CHƯA ghi DB
         User user = new User();
         user.setEmail(normalizedEmail);
         user.setPassword(password);
@@ -123,39 +151,95 @@ public class RegisterController extends HttpServlet {
         user.setRole("CUSTOMER");
         user.setStatus("ACTIVE");
         user.setImage("image2"); // Avatar mặc định
-        
-        // Thêm user vào database
+
         try {
-            System.out.println("=== BẮT ĐẦU ĐĂNG KÝ ===");
-            System.out.println("Email: " + normalizedEmail);
-            System.out.println("Username: " + username.trim());
-            System.out.println("FullName: " + fullName.trim());
-            System.out.println("Phone: " + phoneNumber.trim());
-            
-            boolean success = registerDAO.insertUser(user);
-            
-            System.out.println("Kết quả insertUser: " + success);
-            
+            // Lưu thông tin đăng ký tạm vào session
+            HttpSession session = request.getSession();
+            session.setAttribute("pendingUser", user);
+            session.setAttribute("registerEmail", normalizedEmail);
+
+            // Sinh OTP và gửi email
+            String otpCode = OTPGenerator.generateOTP(normalizedEmail);
+            boolean emailSent = EmailService.sendOTPEmail(normalizedEmail, otpCode);
+
+            if (!emailSent) {
+                request.setAttribute("error", "Không gửi được email OTP. Vui lòng thử lại sau.");
+                request.getRequestDispatcher("/view/register.jsp").forward(request, response);
+                return;
+            }
+
+            request.setAttribute("success", "Đã gửi mã OTP tới email của bạn. Vui lòng kiểm tra hộp thư.");
+            request.getRequestDispatcher("/view/verify-otp.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            System.err.println("=== LỖI KHI GỬI OTP ĐĂNG KÝ ===");
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            System.err.println("=== END LỖI ===");
+            request.setAttribute("error", "Có lỗi xảy ra khi gửi OTP: " + e.getMessage());
+            request.getRequestDispatcher("/view/register.jsp").forward(request, response);
+        }
+    }
+
+    /**
+     * Bước 2: Người dùng nhập OTP, xác thực và tạo tài khoản trong DB
+     */
+    private void handleVerifyOTP(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            request.setAttribute("error", "Phiên đăng ký đã hết hạn. Vui lòng đăng ký lại.");
+            request.getRequestDispatcher("/view/register.jsp").forward(request, response);
+            return;
+        }
+
+        String email = (String) session.getAttribute("registerEmail");
+        User pendingUser = (User) session.getAttribute("pendingUser");
+
+        if (email == null || pendingUser == null) {
+            request.setAttribute("error", "Không tìm thấy thông tin đăng ký. Vui lòng đăng ký lại.");
+            request.getRequestDispatcher("/view/register.jsp").forward(request, response);
+            return;
+        }
+
+        String otpInput = request.getParameter("otp");
+        if (otpInput == null || otpInput.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập mã OTP.");
+            request.getRequestDispatcher("/view/verify-otp.jsp").forward(request, response);
+            return;
+        }
+
+        boolean valid = OTPGenerator.verifyOTP(email, otpInput.trim());
+        if (!valid) {
+            request.setAttribute("error", "Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.");
+            request.getRequestDispatcher("/view/verify-otp.jsp").forward(request, response);
+            return;
+        }
+
+        // OTP hợp lệ -> tiến hành lưu user vào DB
+        RegisterDAO registerDAO = new RegisterDAO();
+        try {
+            boolean success = registerDAO.insertUser(pendingUser);
+
             if (success) {
-                // Đăng ký thành công - Redirect về trang login với thông báo
-                System.out.println("Đăng ký thành công, đang redirect về login...");
+                // Xóa dữ liệu tạm
+                session.removeAttribute("pendingUser");
+                session.removeAttribute("registerEmail");
+
                 String successMessage = java.net.URLEncoder.encode("Đăng ký thành công! Vui lòng đăng nhập.", "UTF-8");
                 String redirectUrl = request.getContextPath() + "/view/login.jsp?success=" + successMessage;
-                System.out.println("Redirect URL: " + redirectUrl);
                 response.sendRedirect(redirectUrl);
-                System.out.println("=== KẾT THÚC ĐĂNG KÝ THÀNH CÔNG ===");
             } else {
-                // Đăng ký thất bại
-                System.out.println("Đăng ký thất bại - insertUser trả về false!");
                 request.setAttribute("error", "Đăng ký thất bại! Vui lòng thử lại.");
                 request.getRequestDispatcher("/view/register.jsp").forward(request, response);
             }
         } catch (Exception e) {
-            System.err.println("=== LỖI KHI ĐĂNG KÝ ===");
+            System.err.println("=== LỖI KHI LƯU USER SAU OTP ===");
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
             System.err.println("=== END LỖI ===");
-            request.setAttribute("error", "Có lỗi xảy ra khi đăng ký: " + e.getMessage());
+            request.setAttribute("error", "Có lỗi xảy ra khi hoàn tất đăng ký: " + e.getMessage());
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
         }
     }
