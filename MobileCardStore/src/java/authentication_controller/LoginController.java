@@ -33,7 +33,7 @@ public class LoginController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
-        // Redirect to login page
+        // Forward to login page (giữ nguyên query parameters như success)
         request.getRequestDispatcher("/view/login.jsp").forward(request, response);
     } 
 
@@ -55,6 +55,7 @@ public class LoginController extends HttpServlet {
         if (email == null || email.trim().isEmpty() || 
             password == null || password.trim().isEmpty()) {
             request.setAttribute("passmsg", "Email và mật khẩu không được để trống!");
+            request.setAttribute("userEmail", email != null ? email : "");
             request.getRequestDispatcher("/view/login.jsp").forward(request, response);
             return;
         }
@@ -84,6 +85,7 @@ public class LoginController extends HttpServlet {
         } else {
             // Login failed
             request.setAttribute("passmsg", "Email hoặc mật khẩu không đúng!");
+            request.setAttribute("userEmail", email);
             request.getRequestDispatcher("/view/login.jsp").forward(request, response);
         }
     }

@@ -10,13 +10,11 @@ import javax.mail.internet.MimeMessage;
  */
 public class EmailService {
     
-    // Cấu hình email FPT
-    // Thử smtp.office365.com trước (FPT thường dùng Office 365)
-    // Nếu không được, thử smtp.fpt.edu.vn hoặc smtp-mail.outlook.com
-    private static final String SMTP_HOST = "smtp.office365.com";
+    // Cấu hình Gmail SMTP với STARTTLS (port 587)
+    private static final String SMTP_HOST = "smtp.gmail.com";
     private static final String SMTP_PORT = "587";
-    private static final String FROM_EMAIL = "quanpvhe176770@fpt.edu.vn";
-    private static final String FROM_PASSWORD = "phamquan0702"; // Có thể cần App Password thay vì password thường
+    private static final String FROM_EMAIL = "thanhlct166@gmail.com";
+    private static final String FROM_PASSWORD = "hrdy lvkh kfqg gpbc"; // Có thể cần App Password thay vì password thường
     
     /**
      * Gửi email OTP đến địa chỉ email
