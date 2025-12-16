@@ -10,7 +10,7 @@ import java.io.IOException;
 /**
  * Authentication Filter để kiểm tra session và phân quyền
  */
-@WebFilter(filterName = "AuthFilter", urlPatterns = {"/view/*", "/index_1.html"})
+@WebFilter(filterName = "AuthFilter", urlPatterns = {"/view/*", "/index_1.html", "/admin/*"})
 public class AuthFilter implements Filter {
     
     @Override
@@ -30,12 +30,25 @@ public class AuthFilter implements Filter {
         String contextPath = httpRequest.getContextPath();
         String path = requestURI.substring(contextPath.length());
         
-        // Cho phép truy cập trang login, register, logout mà không cần session
+        // Tạm thời bỏ qua auth cho toàn bộ admin (yêu cầu user -> bỏ login)
+        if (path.startsWith("/admin/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
+        // Cho phép truy cập các trang/public không cần đăng nhập
         if (path.equals("/view/login.jsp") || 
             path.equals("/login") ||
             path.equals("/logout") ||
             path.equals("/view/register.jsp") ||
             path.equals("/register") ||
+            // Quên mật khẩu + OTP + đặt lại mật khẩu
+            path.equals("/view/ForgotPassword.jsp") ||
+            path.equals("/forgotpassword") ||
+            path.equals("/view/ForgotPasswordOTP.jsp") ||
+            path.equals("/view/ResetPassword.jsp") ||
+            path.equals("/resetpassword") ||
+            // Static / components
             path.startsWith("/components/") ||
             path.startsWith("/public/") ||
             path.startsWith("/dist/") ||
@@ -56,8 +69,8 @@ public class AuthFilter implements Filter {
         // Lấy role từ session
         String role = (String) session.getAttribute("role");
         
-        // Kiểm tra phân quyền cho trang admin (index_1.html)
-        if (path.equals("/index_1.html")) {
+        // Kiểm tra phân quyền cho trang admin (index_1.html và /admin/*)
+        if (path.equals("/index_1.html") || path.startsWith("/admin/")) {
             if (role == null || !role.equalsIgnoreCase("ADMIN")) {
                 // Không phải admin, redirect về trang customer
                 httpResponse.sendRedirect(contextPath + "/view/testlogin.jsp");
@@ -68,8 +81,8 @@ public class AuthFilter implements Filter {
         // Kiểm tra phân quyền cho trang customer (testlogin.jsp)
         if (path.equals("/view/testlogin.jsp")) {
             if (role != null && role.equalsIgnoreCase("ADMIN")) {
-                // Admin không được vào trang customer, redirect về admin
-                httpResponse.sendRedirect(contextPath + "/index_1.html");
+                // Admin không được vào trang customer, redirect về dashboard
+                httpResponse.sendRedirect(contextPath + "/admin/dashboard");
                 return;
             }
         }

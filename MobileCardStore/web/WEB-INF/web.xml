@@ -26,6 +26,41 @@
         <url-pattern>/home</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>AdminDashboardController</servlet-name>
+        <servlet-class>controller.admin.AdminDashboardController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminDashboardController</servlet-name>
+        <url-pattern>/admin/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProductController</servlet-name>
+        <servlet-class>controller.admin.ProductController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProductController</servlet-name>
+        <url-pattern>/plist</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProductController</servlet-name>
+        <url-pattern>/admin/products</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProductStorageController</servlet-name>
+        <servlet-class>controller.admin.ProductStorageController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProductStorageController</servlet-name>
+        <url-pattern>/pklist</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProductStorageController</servlet-name>
+        <url-pattern>/admin/storage</url-pattern>
+    </servlet-mapping>
+
 </web-app>
 
 

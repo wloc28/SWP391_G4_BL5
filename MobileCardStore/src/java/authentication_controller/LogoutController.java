@@ -9,7 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Logout Controller để đăng xuất user
+ * Logout Controller để đăng xuất user và admin
+ * Sau khi đăng xuất sẽ redirect về trang home
  */
 @WebServlet(name = "LogoutServlet", urlPatterns = {"/logout"})
 public class LogoutController extends HttpServlet {
@@ -30,10 +31,11 @@ public class LogoutController extends HttpServlet {
             session.invalidate();
         }
         
-        // Redirect về trang login
-        response.sendRedirect(request.getContextPath() + "/view/login.jsp");
+        // Redirect về trang home
+        response.sendRedirect(request.getContextPath() + "/home");
     }
 }
+
 
 
 

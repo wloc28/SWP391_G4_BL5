@@ -8,9 +8,9 @@
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
 <project name="MobileCardStore" default="default" basedir=".">
-    <description>Builds, tests, and runs the project MobileCardStore.</description>
-    <import file="nbproject/build-impl.xml"/>
-    <!--
+  <description>Builds, tests, and runs the project MobileCardStore.</description>
+  <import file="nbproject/build-impl.xml" />
+  <!--
 
     There exist several targets which are by default empty and which can be 
     used for execution of your tasks. These targets are usually executed 
@@ -68,4 +68,37 @@
     nbproject/build-impl.xml file. 
 
     -->
+
+  <!-- Override the init-taskdefs target to skip CopyLibs task -->
+  <target name="-init-taskdefs">
+    <!-- Do nothing - skip CopyLibs task since libraries are manually copied -->
+    <echo message="Skipping CopyLibs task - libraries manually copied to WEB-INF/lib" />
+
+    <!-- Define copyfiles macro to replace NetBeans copyfiles task -->
+    <macrodef name="copyfiles">
+      <attribute name="files" />
+      <attribute name="todir" />
+      <attribute name="iftldtodir" default="" />
+      <sequential>
+        <copy todir="@{todir}" flatten="true" failonerror="false">
+          <fileset file="@{files}" />
+        </copy>
+        <echo message="Copied @{files} to @{todir}" />
+      </sequential>
+    </macrodef>
+  </target>
+
+  <!-- Custom target to copy libraries manually -->
+  <target name="-copy-libs" description="Copy libraries to WEB-INF/lib">
+    <mkdir dir="${build.web.dir}/WEB-INF/lib" />
+    <copy todir="${build.web.dir}/WEB-INF/lib" flatten="true">
+      <fileset dir="libs" includes="*.jar" />
+    </copy>
+    <echo message="Libraries copied to ${build.web.dir}/WEB-INF/lib" />
+  </target>
+
+  <!-- Override pre-dist to ensure libraries are copied -->
+  <target name="-pre-dist" depends="-copy-libs">
+    <echo message="Preparing distribution with libraries" />
+  </target>
 </project>

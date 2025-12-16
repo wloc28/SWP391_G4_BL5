@@ -25,7 +25,7 @@
                     <form action="login" method="post">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" name="user" class="form-control" id="email" placeholder="Nhập email" required>
+                            <input type="email" name="user" class="form-control" id="email" value="${requestScope.userEmail}" placeholder="Nhập email" required>
                         </div>
                         
                         <div class="mb-3">
@@ -41,7 +41,7 @@
                         </div>
                         
                         <div class="text-center">
-                            <p class="mb-1">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/view/register.jsp">Đăng ký ngay</a></p>
+                            <p class="mb-1">Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký ngay</a></p>
                             <p><a href="forgotpassword">Quên mật khẩu?</a></p>
                         </div>
                     </form>

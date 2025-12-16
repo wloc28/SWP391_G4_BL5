@@ -12,7 +12,7 @@
 --%>
 
 <!-- Customer Header (role = CUSTOMER or not logged in) -->
-<c:if test="${sessionScope.info.role == 'CUSTOMER' or sessionScope.info == null}">
+<c:if test="${sessionScope.info == null or (sessionScope.info != null and sessionScope.info.role == 'CUSTOMER')}">
     <header class="p-3 bg-dark text-white">
     <div class="container">
     <div class="d-flex flex-wrap justify-content-between align-items-center">
@@ -23,12 +23,12 @@
     </ul>
 
     <!-- Not logged in:  Show Login/Register buttons -->
-    <c:if test="${sessionScope.info == null}">
+    <c:if test="${sessionScope.info == null and sessionScope.user == null}">
         <div class="text-end">
             <!-- Login Button -->
-            <button type="button" class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#popupLogin">
+            <a href="${pageContext.request.contextPath}/login" class="btn btn-outline-light me-2">
                 Đăng nhập
-            </button>
+            </a>
             <c:if test="${requestScope.page != 1}">
                 <div class="modal fade" id="popupLogin" tabindex="-1" aria-labelledby="popupLoginLabel" aria-hidden="true">
                     <div class="modal-dialog">
@@ -46,29 +46,14 @@
             </c:if>
 
             <!-- Register Button -->
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#popupRegister">
+            <a href="${pageContext.request.contextPath}/register" class="btn btn-warning">
                 Đăng ký
-            </button>
-            <c:if test="${requestScope.page != 1}">
-                <div class="modal fade" id="popupRegister" tabindex="-1" aria-labelledby="popupRegisterLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content" style="background-color: #e9ecef">
-                            <div class="modal-header">
-                                <h2>Đăng ký</h2>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <%@include file="registerForm.jsp" %>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </c:if>
+            </a>
         </div>
         </c:if>
 
         <!-- Logged-in Customer: Show wallet + dropdown -->
-        <c:if test="${sessionScope.info != null}">
+        <c:if test="${sessionScope.info != null or sessionScope.user != null}">
             <div class="d-flex align-items-center">
                 <!-- Wallet Balance -->
                 <span class="text-warning me-3">
@@ -80,15 +65,41 @@
 
                 <!-- User Dropdown -->
                 <div class="dropdown">
-                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            ${sessionScope.info.fullName != null ? sessionScope.info.fullName : sessionScope.info. sername}
+                    <%
+                        // Map avatar codes với URLs for customer
+                        java.util.Map<String, String> customerAvatarMap = new java.util.HashMap<>();
+                        customerAvatarMap.put("image1", "https://linhkien283.com/wp-content/uploads/2025/10/Hinh-anh-avatar-vo-tri-cute-1.jpg");
+                        customerAvatarMap.put("image2", "https://linhkien283.com/wp-content/uploads/2025/10/Hinh-anh-avatar-vo-tri-cute-2.jpg");
+                        customerAvatarMap.put("image3", "https://linhkien283.com/wp-content/uploads/2025/10/Hinh-anh-avatar-vo-tri-cute-6.jpg");
+                        String customerDefaultAvatar = customerAvatarMap.get("image2");
+                        
+                        // Lấy user từ session (có thể là "info" hoặc "user")
+                        Models.User customerUser = (Models.User)session.getAttribute("info");
+                        if (customerUser == null) {
+                            customerUser = (Models.User)session.getAttribute("user");
+                        }
+                        
+                        String customerAvatarUrl = customerDefaultAvatar;
+                        if (customerUser != null && customerUser.getImage() != null && !customerUser.getImage().trim().isEmpty()) {
+                            customerAvatarUrl = customerAvatarMap.getOrDefault(customerUser.getImage().trim(), customerDefaultAvatar);
+                        }
+                        pageContext.setAttribute("customerAvatarUrl", customerAvatarUrl);
+                        pageContext.setAttribute("customerDefaultAvatar", customerDefaultAvatar);
+                    %>
+                    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="${customerAvatarUrl}" 
+                             alt="Avatar" 
+                             class="rounded-circle me-2" 
+                             style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);"
+                             onerror="this.src='${customerDefaultAvatar}'">
+                        <span>${sessionScope.info.fullName != null && !empty sessionScope.info.fullName ? sessionScope.info.fullName : sessionScope.info.username}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="profile">Thông tin cá nhân</a></li>
-                        <li><a class="dropdown-item" href="order-history">Lịch sử đơn hàng</a></li>
-                        <li><a class="dropdown-item" href="wallet">Nạp tiền</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
+                        <li><a class="dropdown-item" href="wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="logout">Đăng xuất</a></li>
+                        <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
                 </div>
             </div>
@@ -100,33 +111,56 @@
     </c:if>
     <!-- Admin Header (role = ADMIN) -->
     <c:if test="${sessionScope.info.role == 'ADMIN'}">
-        <header class="p-3 text-white" style="background-color: #51585e">
+        <header class="p-3 text-white" style="background-color: #343a40">
         <div class="container">
         <div class="d-flex flex-wrap justify-content-between align-items-center">
 
         <ul class="nav mb-2 justify-content-center mb-md-0">
-        <li><a href="home" class="nav-link px-2 text-primary fw-bold">Mobile Card Store</a></li>
-        <li><a href="ulist" class="nav-link px-2 text-white">Quản lý User</a></li>
-        <li><a href="plist" class="nav-link px-2 text-white">Quản lý Sản phẩm</a></li>
-        <li><a href="pklist" class="nav-link px-2 text-white">Quản lý Kho</a></li>
-        <li><a href="orders-manage" class="nav-link px-2 text-white">Quản lý Đơn hàng</a></li>
-        <li><a href="transactions-manage" class="nav-link px-2 text-white">Giao dịch</a></li>
+        <li><a href="dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
         </ul>
 
-        <c:if test="${sessionScope.info != null}">
+        <c:if test="${sessionScope.info != null or sessionScope.user != null}">
+            <%
+                // Map avatar codes với URLs
+                java.util.Map<String, String> avatarMap = new java.util.HashMap<>();
+                avatarMap.put("image1", "https://linhkien283.com/wp-content/uploads/2025/10/Hinh-anh-avatar-vo-tri-cute-1.jpg");
+                avatarMap.put("image2", "https://linhkien283.com/wp-content/uploads/2025/10/Hinh-anh-avatar-vo-tri-cute-2.jpg");
+                avatarMap.put("image3", "https://linhkien283.com/wp-content/uploads/2025/10/Hinh-anh-avatar-vo-tri-cute-6.jpg");
+                String defaultAvatar = avatarMap.get("image2");
+                
+                // Lấy user từ session (có thể là "info" hoặc "user")
+                Models.User adminUser = (Models.User)session.getAttribute("info");
+                if (adminUser == null) {
+                    adminUser = (Models.User)session.getAttribute("user");
+                }
+                
+                String avatarUrl = defaultAvatar;
+                if (adminUser != null && adminUser.getImage() != null && !adminUser.getImage().trim().isEmpty()) {
+                    avatarUrl = avatarMap.getOrDefault(adminUser.getImage().trim(), defaultAvatar);
+                }
+                pageContext.setAttribute("avatarUrl", avatarUrl);
+                pageContext.setAttribute("defaultAvatar", defaultAvatar);
+            %>
             <div class="d-flex align-items-center">
                 <!-- Admin Badge -->
                 <span class="badge bg-danger me-3">ADMIN</span>
 
-                <!-- User Dropdown -->
+                <!-- User Dropdown with Avatar -->
                 <div class="dropdown">
-                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            ${sessionScope.info.fullName != null ? sessionScope.info.fullName : sessionScope.info.username}
+                    <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="${avatarUrl}" 
+                             alt="Avatar" 
+                             class="rounded-circle me-2" 
+                             style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);"
+                             onerror="this.src='${defaultAvatar}'">
+                        <span>${sessionScope.info.fullName != null && !empty sessionScope.info.fullName ? sessionScope.info.fullName : sessionScope.info.username}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-                        <li><a class="dropdown-item" href="profile">Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="logout">Đăng xuất</a></li>
+                        <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
                 </div>
             </div>
