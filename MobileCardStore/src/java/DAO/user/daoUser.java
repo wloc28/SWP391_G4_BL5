@@ -174,49 +174,136 @@ public class daoUser {
     }
     
     /**
-     * Main method để test login
+     * Cập nhật mật khẩu theo email (dùng cho quên mật khẩu)
+     * @param email Email tài khoản
+     * @param newPassword Mật khẩu mới
+     * @return true nếu cập nhật thành công, false nếu thất bại hoặc không tìm thấy email
+     */
+    public boolean updatePasswordByEmail(String email, String newPassword) {
+        if (email == null || email.trim().isEmpty()) {
+            System.out.println("Email is null or empty");
+            return false;
+        }
+        
+        String normalizedEmail = email.trim().toLowerCase();
+        
+        System.out.println("=== daoUser.updatePasswordByEmail ===");
+        System.out.println("Email (normalized): " + normalizedEmail);
+        System.out.println("New password: " + newPassword);
+        
+        // Kiểm tra user có tồn tại không trước khi update
+        String checkSql = "SELECT user_id, email, is_deleted FROM users WHERE LOWER(TRIM(email)) = ?";
+        
+        try (Connection conn = DBConnection.getConnection()) {
+            int userId = -1;
+            String dbEmail = null;
+            boolean isDeleted = false;
+            
+            // Check user exists và lấy user_id
+            try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+                checkPs.setString(1, normalizedEmail);
+                try (var rs = checkPs.executeQuery()) {
+                    if (rs.next()) {
+                        userId = rs.getInt("user_id");
+                        dbEmail = rs.getString("email");
+                        isDeleted = rs.getBoolean("is_deleted");
+                        System.out.println("Found user - ID: " + userId + ", Email: " + dbEmail + ", is_deleted: " + isDeleted);
+                        
+                        if (isDeleted) {
+                            System.out.println("✗ User is deleted, cannot update password");
+                            return false;
+                        }
+                    } else {
+                        System.out.println("✗ User not found with email: " + normalizedEmail);
+                        return false;
+                    }
+                }
+            }
+            
+            // Update password bằng user_id (chính xác hơn)
+            String updateSql = "UPDATE users SET password = ?, updated_at = ? WHERE user_id = ?";
+            
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+                
+                ps.setString(1, newPassword);
+                ps.setTimestamp(2, now);
+                ps.setInt(3, userId);
+                
+                System.out.println("Executing UPDATE with user_id: " + userId);
+                int rows = ps.executeUpdate();
+                System.out.println("Rows affected: " + rows);
+                
+                if (rows > 0) {
+                    System.out.println("✓ Password updated successfully for user_id: " + userId);
+                } else {
+                    System.out.println("✗ No rows updated - unexpected error");
+                }
+                
+                System.out.println("=== END daoUser.updatePasswordByEmail ===");
+                return rows > 0;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error in daoUser.updatePasswordByEmail: " + e.getMessage());
+            System.err.println("SQLState: " + e.getSQLState());
+            System.err.println("ErrorCode: " + e.getErrorCode());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Main method để test login và reset password
      */
     public static void main(String[] args) {
         System.out.println("========================================");
-        System.out.println("TEST LOGIN FUNCTION");
+        System.out.println("TEST RESET PASSWORD FUNCTION");
         System.out.println("========================================");
         
-        daoUser customerLogin = new daoUser();
+        daoUser userDao = new daoUser();
         
-        // Test với thông tin đã cho
-        String testEmail = "quanpham@gmail.com";
-        String testPassword = "12345";
+        // Test reset password
+        String testEmail = "cuanlanhchanh01@gmail.com";
+        String newPassword = "quan2003";
         
-        System.out.println("\nĐang test với:");
+        System.out.println("\nĐang test RESET PASSWORD với:");
         System.out.println("Email: " + testEmail);
-        System.out.println("Password: " + testPassword);
+        System.out.println("Mật khẩu mới: " + newPassword);
         System.out.println("\n");
         
-        User user = customerLogin.login(testEmail, testPassword);
+        boolean updated = userDao.updatePasswordByEmail(testEmail, newPassword);
         
         System.out.println("\n========================================");
-        if (user != null) {
-            System.out.println("KẾT QUẢ: LOGIN THÀNH CÔNG!");
+        if (updated) {
+            System.out.println("KẾT QUẢ: RESET PASSWORD THÀNH CÔNG!");
             System.out.println("========================================");
-            System.out.println("Thông tin user:");
-            System.out.println("  - User ID: " + user.getUserId());
-            System.out.println("  - Username: " + user.getUsername());
-            System.out.println("  - Email: " + user.getEmail());
-            System.out.println("  - Full Name: " + user.getFullName());
-            System.out.println("  - Phone: " + user.getPhoneNumber());
-            System.out.println("  - Balance: " + user.getBalance());
-            System.out.println("  - Role: " + user.getRole());
-            System.out.println("  - Status: " + user.getStatus());
-            System.out.println("  - Is Deleted: " + user.isDeleted());
+            System.out.println("Mật khẩu đã được cập nhật trong database.");
+            System.out.println("\nĐang test LOGIN với mật khẩu mới...");
+            
+            // Test login với mật khẩu mới
+            User user = userDao.login(testEmail, newPassword);
+            if (user != null) {
+                System.out.println("✓ LOGIN THÀNH CÔNG với mật khẩu mới!");
+                System.out.println("  - User ID: " + user.getUserId());
+                System.out.println("  - Username: " + user.getUsername());
+                System.out.println("  - Email: " + user.getEmail());
+                System.out.println("  - Full Name: " + user.getFullName());
+            } else {
+                System.out.println("✗ LOGIN THẤT BẠI với mật khẩu mới!");
+                System.out.println("  Có thể mật khẩu chưa được cập nhật đúng trong DB.");
+            }
         } else {
-            System.out.println("KẾT QUẢ: LOGIN THẤT BẠI!");
+            System.out.println("KẾT QUẢ: RESET PASSWORD THẤT BẠI!");
             System.out.println("========================================");
-            System.out.println("Không tìm thấy user với email và password này.");
+            System.out.println("Không thể cập nhật mật khẩu.");
             System.out.println("Hãy kiểm tra:");
-            System.out.println("  1. Email và password có đúng không?");
-            System.out.println("  2. Tên bảng trong database có đúng là 'users' không?");
-            System.out.println("  3. Tên các cột có đúng không?");
-            System.out.println("  4. Database có kết nối được không?");
+            System.out.println("  1. Email có tồn tại trong database không?");
+            System.out.println("  2. Email có đúng format không?");
+            System.out.println("  3. Tên bảng trong database có đúng là 'users' không?");
+            System.out.println("  4. Tên các cột có đúng không?");
+            System.out.println("  5. Database có kết nối được không?");
+            System.out.println("  6. User có bị is_deleted = 1 không?");
         }
         System.out.println("========================================\n");
     }

@@ -13,8 +13,6 @@
         <div style="width: 25vw; height: 50vh" class="container bg-body-secondary mt-5 mb-5">
             <h2>Forgot password</h2>
             <form action="resetpassword" method="post">
-                <input type="hidden" name="email" value="${param.email}"/>
-                <input type="hidden" name="token" value="${param.token}"/>
                 <div class="form-group ">
                     <label for="newpassword">New Password:</label>
                     <div class="password-container">
@@ -22,6 +20,9 @@
                     </div>
                 </div>
                 <br>
+                <c:if test="${not empty requestScope.error}">
+                    <p class="text-danger">${requestScope.error}</p>
+                </c:if>
                 <div class="form-group ">
                     <label for="renewpassword">New Password (again):</label>
                     <div class="password-container">
