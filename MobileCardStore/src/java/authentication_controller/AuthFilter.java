@@ -36,12 +36,19 @@ public class AuthFilter implements Filter {
             return;
         }
         
-        // Cho phép truy cập trang login, register, logout mà không cần session
+        // Cho phép truy cập các trang/public không cần đăng nhập
         if (path.equals("/view/login.jsp") || 
             path.equals("/login") ||
             path.equals("/logout") ||
             path.equals("/view/register.jsp") ||
             path.equals("/register") ||
+            // Quên mật khẩu + OTP + đặt lại mật khẩu
+            path.equals("/view/ForgotPassword.jsp") ||
+            path.equals("/forgotpassword") ||
+            path.equals("/view/ForgotPasswordOTP.jsp") ||
+            path.equals("/view/ResetPassword.jsp") ||
+            path.equals("/resetpassword") ||
+            // Static / components
             path.startsWith("/components/") ||
             path.startsWith("/public/") ||
             path.startsWith("/dist/") ||

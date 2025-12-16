@@ -47,19 +47,19 @@ public class RegisterController extends HttpServlet {
     }
 
     /**
-     * Bước 1: Nhận thông tin đăng ký, validate, gửi OTP tới email và chuyển sang verify-otp
+     * 1: Nhận thông tin đăng ký, validate, gửi OTP và verify
      */
     private void handleSendOTP(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Lấy thông tin từ form
+        // get data
         String email = request.getParameter("email");
         String password = request.getParameter("password");
         String fullName = request.getParameter("fullname");
         String phoneNumber = request.getParameter("mobile");
         String username = request.getParameter("username");
         
-        // Validate input - Kiểm tra các trường bắt buộc
+        // Validate input
         if (email == null || email.trim().isEmpty()) {
             request.setAttribute("error", "Email không được để trống!");
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
@@ -84,7 +84,7 @@ public class RegisterController extends HttpServlet {
             return;
         }
         
-        // Validate email format
+        // Validate email
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         String normalizedEmail = email.trim().toLowerCase();
         if (!normalizedEmail.matches(emailRegex)) {
@@ -93,7 +93,7 @@ public class RegisterController extends HttpServlet {
             return;
         }
         
-        // Validate password - ít nhất 6 ký tự, có chữ và số
+        // Validate password min 6 ký tự, có cả chữ, số
         if (password.length() < 6) {
             request.setAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự!");
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
@@ -106,42 +106,53 @@ public class RegisterController extends HttpServlet {
             return;
         }
         
-        // Validate phone number - chỉ chứa số
+        // Validate sdt chỉ chứa số
         if (!phoneNumber.trim().matches("[0-9]+")) {
             request.setAttribute("error", "Số điện thoại chỉ được chứa số!");
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
             return;
         }
         
-        // Validate full name - không chứa số
+        // Validate sdt từ 9~12 số
+        if (phoneNumber.length() < 9 || phoneNumber.length() > 12) {
+            request.setAttribute("error", "Số điện thoại phải có từ 9~12 số!");
+            request.setAttribute("email", email);
+            request.setAttribute("fullname", fullName);
+            request.setAttribute("mobile", phoneNumber);
+            request.setAttribute("username", username);
+            request.getRequestDispatcher("/view/register.jsp").forward(request, response);
+            return;
+        }        
+        
+        // Validate full name
         if (fullName.trim().matches(".*\\d.*")) {
             request.setAttribute("error", "Họ và tên không được chứa số!");
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
             return;
         }
         
-        // Tạo username từ email nếu không có
+        // Tạo username từ email nếu ko nhập
         if (username == null || username.trim().isEmpty()) {
             username = normalizedEmail.substring(0, normalizedEmail.indexOf("@"));
         }
         
         RegisterDAO registerDAO = new RegisterDAO();
         
-        // Kiểm tra email đã tồn tại
+        // Check email đã tồn tại
         if (registerDAO.checkEmailExists(normalizedEmail)) {
             request.setAttribute("error", "Email này đã được sử dụng!");
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
             return;
         }
         
-        // Kiểm tra username đã tồn tại
+        // Check username đã tồn tại
         if (registerDAO.checkUsernameExists(username.trim())) {
             request.setAttribute("error", "Username này đã được sử dụng!");
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
             return;
         }
 
-        // Tạo User object lưu tạm trong session, CHƯA ghi DB
+        // Tạo User object tạm trong session, chưa lưu db
         User user = new User();
         user.setEmail(normalizedEmail);
         user.setPassword(password);
@@ -158,7 +169,7 @@ public class RegisterController extends HttpServlet {
             session.setAttribute("pendingUser", user);
             session.setAttribute("registerEmail", normalizedEmail);
 
-            // Sinh OTP và gửi email
+            // send email OTP
             String otpCode = OTPGenerator.generateOTP(normalizedEmail);
             boolean emailSent = EmailService.sendOTPEmail(normalizedEmail, otpCode);
 
@@ -175,14 +186,14 @@ public class RegisterController extends HttpServlet {
             System.err.println("=== LỖI KHI GỬI OTP ĐĂNG KÝ ===");
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
-            System.err.println("=== END LỖI ===");
+            System.err.println("=== END ERR ===");
             request.setAttribute("error", "Có lỗi xảy ra khi gửi OTP: " + e.getMessage());
             request.getRequestDispatcher("/view/register.jsp").forward(request, response);
         }
     }
 
     /**
-     * Bước 2: Người dùng nhập OTP, xác thực và tạo tài khoản trong DB
+     * 2: Nhập OTP, xác thực và tạo tài khoản trong DB
      */
     private void handleVerifyOTP(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -217,7 +228,7 @@ public class RegisterController extends HttpServlet {
             return;
         }
 
-        // OTP hợp lệ -> tiến hành lưu user vào DB
+        // OTP đúng -> lưu user vào db
         RegisterDAO registerDAO = new RegisterDAO();
         try {
             boolean success = registerDAO.insertUser(pendingUser);
@@ -228,7 +239,7 @@ public class RegisterController extends HttpServlet {
                 session.removeAttribute("registerEmail");
 
                 String successMessage = java.net.URLEncoder.encode("Đăng ký thành công! Vui lòng đăng nhập.", "UTF-8");
-                String redirectUrl = request.getContextPath() + "/view/login.jsp?success=" + successMessage;
+                String redirectUrl = request.getContextPath() + "/login?success=" + successMessage;
                 response.sendRedirect(redirectUrl);
             } else {
                 request.setAttribute("error", "Đăng ký thất bại! Vui lòng thử lại.");
