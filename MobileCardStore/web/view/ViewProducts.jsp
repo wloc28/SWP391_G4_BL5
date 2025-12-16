@@ -32,133 +32,133 @@
                     </div>
                 </c:if>
                 
-                <!-- Main Layout: Sidebar + Content -->
-                <div class="flex flex-col lg:flex-row gap-6">
-                    <!-- Sidebar Filter -->
-                    <aside class="lg:w-64 flex-shrink-0">
-                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 sticky top-4">
-                            <h2 class="text-sm font-semibold text-gray-900 mb-4">Bộ lọc</h2>
-                            <form method="GET" action="products" id="filterForm" class="space-y-4">
-                                <!-- Search -->
-                                <div>
-                                    <label for="search" class="block text-xs font-medium text-gray-700 mb-1">Tìm kiếm</label>
-                                    <input type="text" 
-                                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors" 
-                                           id="search" name="search" value="${searchKeyword}" placeholder="Tên sản phẩm...">
-                                </div>
-                                
-                                <!-- Provider Filter -->
-                                <div>
-                                    <label for="providerId" class="block text-xs font-medium text-gray-700 mb-1">Nhà cung cấp</label>
-                                    <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
-                                            id="providerId" name="providerId">
-                                        <option value="0">Tất cả</option>
-                                        <c:if test="${providers != null}">
-                                            <c:forEach var="provider" items="${providers}">
-                                                <option value="${provider.providerId}" 
-                                                        ${selectedProviderId == provider.providerId ? 'selected' : ''}>
-                                                    ${provider.providerName}
-                                                </option>
-                                            </c:forEach>
-                                        </c:if>
-                                    </select>
-                                </div>
-                                
-                                <!-- Provider Type Filter -->
-                                <div>
-                                    <label for="providerType" class="block text-xs font-medium text-gray-700 mb-1">Loại</label>
-                                    <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
-                                            id="providerType" name="providerType">
-                                        <option value="ALL" ${selectedProviderType == 'ALL' ? 'selected' : ''}>Tất cả</option>
-                                        <option value="TEL" ${selectedProviderType == 'TEL' ? 'selected' : ''}>Điện thoại</option>
-                                        <option value="GAME" ${selectedProviderType == 'GAME' ? 'selected' : ''}>Game</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Price Range -->
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-2">Khoảng giá</label>
-                                    <div class="space-y-2">
-                                        <c:set var="isUnder50k" value="${(empty minPrice || minPrice == '0') && (empty maxPrice || maxPrice == '50000')}" />
-                                        <button type="button" onclick="setPriceRange(0, 50000)" 
-                                                class="w-full text-left px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors ${isUnder50k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
-                                            Dưới 50.000 đ
-                                        </button>
-                                        
-                                        <c:set var="is50k100k" value="${minPrice == '50000' && maxPrice == '100000'}" />
-                                        <button type="button" onclick="setPriceRange(50000, 100000)" 
-                                                class="w-full text-left px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors ${is50k100k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
-                                            50.000 - 100.000 đ
-                                        </button>
-                                        
-                                        <c:set var="is100k200k" value="${minPrice == '100000' && maxPrice == '200000'}" />
-                                        <button type="button" onclick="setPriceRange(100000, 200000)" 
-                                                class="w-full text-left px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors ${is100k200k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
-                                            100.000 - 200.000 đ
-                                        </button>
-                                        
-                                        <c:set var="is200k500k" value="${minPrice == '200000' && maxPrice == '500000'}" />
-                                        <button type="button" onclick="setPriceRange(200000, 500000)" 
-                                                class="w-full text-left px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors ${is200k500k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
-                                            200.000 - 500.000 đ
-                                        </button>
-                                        
-                                        <c:set var="isOver500k" value="${minPrice == '500000' && empty maxPrice}" />
-                                        <button type="button" onclick="setPriceRange(500000, null)" 
-                                                class="w-full text-left px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors ${isOver500k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
-                                            Trên 500.000 đ
-                                        </button>
-                                        
-                                        <button type="button" onclick="clearPriceRange()" 
-                                                class="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                                            Tất cả giá
-                                        </button>
-                                    </div>
-                                    <!-- Hidden inputs for price range -->
-                                    <input type="hidden" name="minPrice" id="minPrice" value="${minPrice}">
-                                    <input type="hidden" name="maxPrice" id="maxPrice" value="${maxPrice}">
-                                </div>
-                                
-                                <!-- Sort By -->
-                                <div>
-                                    <label for="sortBy" class="block text-xs font-medium text-gray-700 mb-1">Sắp xếp theo</label>
-                                    <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
-                                            id="sortBy" name="sortBy">
-                                        <option value="created_at" ${sortBy == 'created_at' ? 'selected' : ''}>Mới nhất</option>
-                                        <option value="name" ${sortBy == 'name' ? 'selected' : ''}>Tên A-Z</option>
-                                        <option value="price" ${sortBy == 'price' ? 'selected' : ''}>Giá</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Sort Order -->
-                                <div>
-                                    <label for="sortOrder" class="block text-xs font-medium text-gray-700 mb-1">Thứ tự</label>
-                                    <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
-                                            id="sortOrder" name="sortOrder">
-                                        <option value="ASC" ${sortOrder == 'ASC' ? 'selected' : ''}>Tăng dần</option>
-                                        <option value="DESC" ${sortOrder == 'DESC' ? 'selected' : ''}>Giảm dần</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Action Buttons -->
-                                <div class="flex gap-2 pt-2">
-                                    <button type="submit" class="flex-1 bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors font-medium text-sm">
-                                        Tìm kiếm
-                                    </button>
-                                    <a href="products" class="flex-1 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded hover:bg-gray-50 transition-colors font-medium text-sm text-center">
-                                        Reset
-                                    </a>
-                                </div>
-                                
-                                <!-- Hidden fields -->
-                                <input type="hidden" name="pageSize" value="12">
-                                <input type="hidden" name="page" value="1" id="pageInput">
-                            </form>
+                <!-- Filter Bar (Horizontal) -->
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-6">
+                    <form method="GET" action="products" id="filterForm" class="space-y-4">
+                        <!-- First Row: Search, Provider, Type, Sort -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Search -->
+                            <div>
+                                <label for="search" class="block text-xs font-medium text-gray-700 mb-1">Tìm kiếm</label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors" 
+                                       id="search" name="search" value="${searchKeyword}" placeholder="Tên sản phẩm...">
+                            </div>
+                            
+                            <!-- Provider Filter -->
+                            <div>
+                                <label for="providerId" class="block text-xs font-medium text-gray-700 mb-1">Nhà cung cấp</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
+                                        id="providerId" name="providerId">
+                                    <option value="0">Tất cả</option>
+                                    <c:if test="${providers != null}">
+                                        <c:forEach var="provider" items="${providers}">
+                                            <option value="${provider.providerId}" 
+                                                    ${selectedProviderId == provider.providerId ? 'selected' : ''}>
+                                                ${provider.providerName}
+                                            </option>
+                                        </c:forEach>
+                                    </c:if>
+                                </select>
+                            </div>
+                            
+                            <!-- Provider Type Filter -->
+                            <div>
+                                <label for="providerType" class="block text-xs font-medium text-gray-700 mb-1">Loại</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
+                                        id="providerType" name="providerType">
+                                    <option value="ALL" ${selectedProviderType == 'ALL' ? 'selected' : ''}>Tất cả</option>
+                                    <option value="TEL" ${selectedProviderType == 'TEL' ? 'selected' : ''}>Điện thoại</option>
+                                    <option value="GAME" ${selectedProviderType == 'GAME' ? 'selected' : ''}>Game</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Sort By -->
+                            <div>
+                                <label for="sortBy" class="block text-xs font-medium text-gray-700 mb-1">Sắp xếp theo</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
+                                        id="sortBy" name="sortBy">
+                                    <option value="created_at" ${sortBy == 'created_at' ? 'selected' : ''}>Mới nhất</option>
+                                    <option value="name" ${sortBy == 'name' ? 'selected' : ''}>Tên A-Z</option>
+                                    <option value="price" ${sortBy == 'price' ? 'selected' : ''}>Giá</option>
+                                </select>
+                            </div>
                         </div>
-                    </aside>
-                    
-                    <!-- Main Content Area -->
-                    <div class="flex-1 min-w-0">
+                        
+                        <!-- Second Row: Price Range Buttons -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">Khoảng giá</label>
+                            <div class="flex flex-wrap gap-2">
+                                <c:set var="isUnder50k" value="${(empty minPrice || minPrice == '0') && (empty maxPrice || maxPrice == '50000')}" />
+                                <button type="button" onclick="setPriceRange(0, 50000)" 
+                                        class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors whitespace-nowrap ${isUnder50k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
+                                    Dưới 50.000 đ
+                                </button>
+                                
+                                <c:set var="is50k100k" value="${minPrice == '50000' && maxPrice == '100000'}" />
+                                <button type="button" onclick="setPriceRange(50000, 100000)" 
+                                        class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors whitespace-nowrap ${is50k100k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
+                                    50.000 - 100.000 đ
+                                </button>
+                                
+                                <c:set var="is100k200k" value="${minPrice == '100000' && maxPrice == '200000'}" />
+                                <button type="button" onclick="setPriceRange(100000, 200000)" 
+                                        class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors whitespace-nowrap ${is100k200k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
+                                    100.000 - 200.000 đ
+                                </button>
+                                
+                                <c:set var="is200k500k" value="${minPrice == '200000' && maxPrice == '500000'}" />
+                                <button type="button" onclick="setPriceRange(200000, 500000)" 
+                                        class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors whitespace-nowrap ${is200k500k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
+                                    200.000 - 500.000 đ
+                                </button>
+                                
+                                <c:set var="isOver500k" value="${minPrice == '500000' && empty maxPrice}" />
+                                <button type="button" onclick="setPriceRange(500000, null)" 
+                                        class="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors whitespace-nowrap ${isOver500k ? 'bg-gray-100 border-gray-400 font-medium' : ''}">
+                                    Trên 500.000 đ
+                                </button>
+                                
+                                <button type="button" onclick="clearPriceRange()" 
+                                        class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                    Tất cả giá
+                                </button>
+                            </div>
+                            <!-- Hidden inputs for price range -->
+                            <input type="hidden" name="minPrice" id="minPrice" value="${minPrice}">
+                            <input type="hidden" name="maxPrice" id="maxPrice" value="${maxPrice}">
+                        </div>
+                        
+                        <!-- Third Row: Sort Order and Action Buttons -->
+                        <div class="flex flex-wrap items-end gap-4">
+                            <div class="flex-1 min-w-[150px]">
+                                <label for="sortOrder" class="block text-xs font-medium text-gray-700 mb-1">Thứ tự</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors bg-white" 
+                                        id="sortOrder" name="sortOrder">
+                                    <option value="ASC" ${sortOrder == 'ASC' ? 'selected' : ''}>Tăng dần</option>
+                                    <option value="DESC" ${sortOrder == 'DESC' ? 'selected' : ''}>Giảm dần</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex gap-2">
+                                <button type="submit" class="bg-gray-900 text-white px-6 py-2 rounded hover:bg-gray-800 transition-colors font-medium text-sm whitespace-nowrap">
+                                    Tìm kiếm
+                                </button>
+                                <a href="products" class="bg-white text-gray-700 border border-gray-300 px-6 py-2 rounded hover:bg-gray-50 transition-colors font-medium text-sm text-center whitespace-nowrap">
+                                    Reset
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden fields -->
+                        <input type="hidden" name="pageSize" value="12">
+                        <input type="hidden" name="page" value="1" id="pageInput">
+                    </form>
+                </div>
+                
+                <!-- Main Content Area -->
+                <div class="w-full">
                         <!-- Results Info -->
                         <div class="flex justify-between items-center mb-4">
                             <p class="text-sm text-gray-600">
@@ -261,7 +261,6 @@
                                 </c:if>
                             </c:otherwise>
                         </c:choose>
-                    </div>
                 </div>
             </div>
         </div>
