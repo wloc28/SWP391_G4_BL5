@@ -7,9 +7,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import dao.user.daoUser;
-import dao.user.RegisterDAO;
-import models.User;
+import DAO.user.daoUser;
+import DAO.user.RegisterDAO;
+import Models.User;
 
 /**
  * Update Profile Controller

@@ -13,8 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Cookie;
-import dao.user.daoUser;
-import models.User;
+import DAO.user.daoUser;
+import Models.User;
 
 /**
  *
