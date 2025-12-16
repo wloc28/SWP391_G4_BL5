@@ -52,7 +52,7 @@
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="text-muted small">Số dư</div>
-                                        <div class="fw-semibold">${user.balance}</div>
+                                        <div class="fw-semibold"><fmt:formatNumber value="${user.balance}" type="number" maxFractionDigits="0" /> đ</div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="text-muted small">Ngày tạo</div>
@@ -67,71 +67,23 @@
                         <div class="card shadow-sm mb-3">
                             <div class="card-body">
                                 <h6 class="card-title">Hành động</h6>
-                                <form method="post" action="${pageContext.request.contextPath}/admin/users">
+                                <form method="post" action="${pageContext.request.contextPath}/admin/users" id="statusForm">
                                     <input type="hidden" name="action" value="status">
                                     <input type="hidden" name="userId" value="${user.userId}">
                                     <input type="hidden" name="redirect" value="detail">
                                     <c:choose>
                                         <c:when test="${user.status == 'ACTIVE'}">
                                             <input type="hidden" name="status" value="BANNED">
-                                            <button type="submit" class="btn btn-danger w-100 mb-2">Khoá tài khoản</button>
+                                            <button type="button" onclick="confirmStatusChange('${user.userId}', 'BANNED', '${user.username}', 'khoá')" class="btn btn-danger w-100 mb-2">Khoá tài khoản</button>
                                         </c:when>
                                         <c:otherwise>
                                             <input type="hidden" name="status" value="ACTIVE">
-                                            <button type="submit" class="btn btn-success w-100 mb-2">Mở khoá tài khoản</button>
+                                            <button type="button" onclick="confirmStatusChange('${user.userId}', 'ACTIVE', '${user.username}', 'mở khoá')" class="btn btn-success w-100 mb-2">Mở khoá tài khoản</button>
                                         </c:otherwise>
                                     </c:choose>
                                 </form>
+                                <a href="${pageContext.request.contextPath}/admin/user-edit?id=${user.userId}" class="btn btn-warning w-100 mb-2">Chỉnh sửa</a>
                                 <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary w-100">Quay lại danh sách</a>
-                            </div>
-                        </div>
-
-                        <div class="card shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="card-title mb-0">Cập nhật thông tin</h6>
-                                    <span class="text-muted small">Lưu ý: không đổi mật khẩu tại đây</span>
-                                </div>
-                                <hr>
-                                <form method="post" action="${pageContext.request.contextPath}/admin/users">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="userId" value="${user.userId}">
-                                    <div class="mb-2">
-                                        <label class="form-label small">Username</label>
-                                        <input type="text" name="username" class="form-control form-control-sm" value="${user.username}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small">Họ tên</label>
-                                        <input type="text" name="fullName" class="form-control form-control-sm" value="${user.fullName}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small">Số điện thoại</label>
-                                        <input type="text" name="phoneNumber" class="form-control form-control-sm" value="${user.phoneNumber}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small">Số dư</label>
-                                        <input type="number" step="0.01" name="balance" class="form-control form-control-sm" value="${user.balance}">
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small">Vai trò</label>
-                                            <select name="role" class="form-select form-select-sm">
-                                                <option value="ADMIN" ${user.role == 'ADMIN' ? 'selected' : ''}>ADMIN</option>
-                                                <option value="CUSTOMER" ${user.role == 'CUSTOMER' ? 'selected' : ''}>CUSTOMER</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small">Trạng thái</label>
-                                            <select name="status" class="form-select form-select-sm">
-                                                <option value="ACTIVE" ${user.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-                                                <option value="BANNED" ${user.status == 'BANNED' ? 'selected' : ''}>BANNED</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary btn-sm">Lưu thay đổi</button>
-                                    </div>
-                                </form>
                             </div>
                         </div>
                     </div>
@@ -140,6 +92,24 @@
         </div>
 
         <%@include file="../components/footer.jsp" %>
+        <script>
+            function confirmStatusChange(userId, newStatus, username, action) {
+                Swal.fire({
+                    title: 'Xác nhận',
+                    text: 'Bạn có chắc chắn muốn ' + action + ' tài khoản "' + username + '" không?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: newStatus === 'BANNED' ? '#d33' : '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Xác nhận',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('statusForm').submit();
+                    }
+                });
+            }
+        </script>
         <c:if test="${param.selfBan == 'true'}">
             <script>
                 Swal.fire({
