@@ -125,7 +125,48 @@ public class ProductStorageController extends HttpServlet {
     private void listStorageItems(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            request.setAttribute("storageItems", storageDAO.getAllStorageItems());
+            // Lấy các tham số tìm kiếm
+            String searchKeyword = request.getParameter("searchKeyword");
+            String status = request.getParameter("status");
+            
+            // Lấy tham số phân trang
+            int page = 1;
+            int itemsPerPage = 3; // Số items mỗi trang
+            
+            String pageParam = request.getParameter("page");
+            if (pageParam != null && !pageParam.isEmpty()) {
+                try {
+                    page = Integer.parseInt(pageParam);
+                    if (page < 1) page = 1;
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+            
+            // Tính offset
+            int offset = (page - 1) * itemsPerPage;
+            
+            // Đếm tổng số items
+            int totalItems = storageDAO.countStorageItems(searchKeyword, status);
+            
+            // Tính tổng số trang
+            int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
+            if (totalPages < 1) totalPages = 1;
+            
+            // Lấy danh sách items theo trang
+            request.setAttribute("storageItems", 
+                storageDAO.searchStorageItemsWithPagination(searchKeyword, status, offset, itemsPerPage));
+            
+            // Set các attributes cho pagination
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalItems", totalItems);
+            request.setAttribute("itemsPerPage", itemsPerPage);
+            
+            // Set các attributes cho search
+            request.setAttribute("searchKeyword", searchKeyword);
+            request.setAttribute("selectedStatus", status);
+            
             request.setAttribute("products", productDAO.getAllProducts());
             request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
         } catch (Exception e) {

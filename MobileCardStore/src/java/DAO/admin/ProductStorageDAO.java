@@ -184,6 +184,176 @@ public class ProductStorageDAO {
     }
     
     /**
+     * Tìm kiếm storage items theo nhiều tiêu chí
+     * @param searchKeyword từ khóa tìm kiếm (tìm trong product name, serial, card code)
+     * @param status trạng thái (AVAILABLE, SOLD, ERROR, hoặc null/empty cho tất cả)
+     * @return danh sách storage items phù hợp
+     */
+    public List<ProductStorage> searchStorageItems(String searchKeyword, String status) throws SQLException {
+        List<ProductStorage> items = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ps.*, p.product_name, p.price, pr.provider_name ")
+           .append("FROM product_storage ps ")
+           .append("LEFT JOIN products p ON ps.product_id = p.product_id ")
+           .append("LEFT JOIN providers pr ON p.provider_id = pr.provider_id ")
+           .append("WHERE ps.is_deleted = 0 ");
+        
+        // Thêm điều kiện tìm kiếm theo từ khóa
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            sql.append("AND (p.product_name LIKE ? OR ps.serial_number LIKE ? OR ps.card_code LIKE ?) ");
+        }
+        
+        // Thêm điều kiện lọc theo trạng thái
+        if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+            sql.append("AND ps.status = ? ");
+        }
+        
+        sql.append("ORDER BY ps.created_at DESC");
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            
+            // Set parameters cho từ khóa tìm kiếm
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                String searchPattern = "%" + searchKeyword.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+            
+            // Set parameter cho trạng thái
+            if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+                ps.setString(paramIndex++, status);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ProductStorage item = mapResultSetToStorage(rs);
+                    items.add(item);
+                }
+            }
+        }
+        
+        return items;
+    }
+    
+    /**
+     * Tìm kiếm storage items với phân trang
+     * @param searchKeyword từ khóa tìm kiếm
+     * @param status trạng thái
+     * @param offset vị trí bắt đầu
+     * @param limit số lượng items mỗi trang
+     * @return danh sách storage items
+     */
+    public List<ProductStorage> searchStorageItemsWithPagination(String searchKeyword, String status, int offset, int limit) throws SQLException {
+        List<ProductStorage> items = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ps.*, p.product_name, p.price, pr.provider_name ")
+           .append("FROM product_storage ps ")
+           .append("LEFT JOIN products p ON ps.product_id = p.product_id ")
+           .append("LEFT JOIN providers pr ON p.provider_id = pr.provider_id ")
+           .append("WHERE ps.is_deleted = 0 ");
+        
+        // Thêm điều kiện tìm kiếm theo từ khóa
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            sql.append("AND (p.product_name LIKE ? OR ps.serial_number LIKE ? OR ps.card_code LIKE ?) ");
+        }
+        
+        // Thêm điều kiện lọc theo trạng thái
+        if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+            sql.append("AND ps.status = ? ");
+        }
+        
+        sql.append("ORDER BY ps.created_at DESC ");
+        sql.append("LIMIT ? OFFSET ?");
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            
+            // Set parameters cho từ khóa tìm kiếm
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                String searchPattern = "%" + searchKeyword.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+            
+            // Set parameter cho trạng thái
+            if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+                ps.setString(paramIndex++, status);
+            }
+            
+            // Set pagination parameters
+            ps.setInt(paramIndex++, limit);
+            ps.setInt(paramIndex++, offset);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ProductStorage item = mapResultSetToStorage(rs);
+                    items.add(item);
+                }
+            }
+        }
+        
+        return items;
+    }
+    
+    /**
+     * Đếm tổng số storage items theo điều kiện tìm kiếm
+     * @param searchKeyword từ khóa tìm kiếm
+     * @param status trạng thái
+     * @return tổng số items
+     */
+    public int countStorageItems(String searchKeyword, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) as total ")
+           .append("FROM product_storage ps ")
+           .append("LEFT JOIN products p ON ps.product_id = p.product_id ")
+           .append("WHERE ps.is_deleted = 0 ");
+        
+        // Thêm điều kiện tìm kiếm theo từ khóa
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            sql.append("AND (p.product_name LIKE ? OR ps.serial_number LIKE ? OR ps.card_code LIKE ?) ");
+        }
+        
+        // Thêm điều kiện lọc theo trạng thái
+        if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+            sql.append("AND ps.status = ? ");
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            
+            // Set parameters cho từ khóa tìm kiếm
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                String searchPattern = "%" + searchKeyword.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+            
+            // Set parameter cho trạng thái
+            if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+                ps.setString(paramIndex++, status);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
      * Map ResultSet to ProductStorage object
      */
     private ProductStorage mapResultSetToStorage(ResultSet rs) throws SQLException {

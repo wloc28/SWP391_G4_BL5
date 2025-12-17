@@ -42,6 +42,204 @@ public class ProductDAO {
     }
     
     /**
+     * Lấy sản phẩm phân trang
+     */
+    public List<Product> getProductsPaginated(int offset, int limit) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT p.*, pr.provider_name, pr.provider_type " +
+                     "FROM products p " +
+                     "LEFT JOIN providers pr ON p.provider_id = pr.provider_id " +
+                     "WHERE p.is_deleted = 0 " +
+                     "ORDER BY p.created_at DESC " +
+                     "LIMIT ? OFFSET ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, limit);
+            ps.setInt(2, offset);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapResultSetToProduct(rs));
+                }
+            }
+        }
+        
+        return products;
+    }
+    
+    /**
+     * Đếm tổng số sản phẩm (không bị xóa)
+     */
+    public int countProducts() throws SQLException {
+        String sql = "SELECT COUNT(*) AS total FROM products WHERE is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Tìm kiếm & lọc sản phẩm cho trang quản lý (admin) với phân trang
+     */
+    public List<Product> searchProductsForAdmin(String searchKeyword,
+                                                String statusFilter,
+                                                String providerType,
+                                                String priceRange,
+                                                String sortBy,
+                                                String sortType,
+                                                int offset,
+                                                int limit) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        
+        StringBuilder where = new StringBuilder();
+        where.append("WHERE p.is_deleted = 0 ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            where.append("AND (p.product_name LIKE ? OR p.description LIKE ?) ");
+            String pattern = "%" + searchKeyword.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+        }
+        
+        if (statusFilter != null && !"ALL".equalsIgnoreCase(statusFilter)) {
+            where.append("AND p.status = ? ");
+            params.add(statusFilter.toUpperCase());
+        }
+        
+        // priceRange: ALL, LOW(<100k), MEDIUM(100k-500k), HIGH(>500k)
+        if (priceRange != null && !"ALL".equalsIgnoreCase(priceRange)) {
+            switch (priceRange.toUpperCase()) {
+                case "LOW":
+                    where.append("AND p.price < 100000 ");
+                    break;
+                case "MEDIUM":
+                    where.append("AND p.price BETWEEN 100000 AND 500000 ");
+                    break;
+                case "HIGH":
+                    where.append("AND p.price > 500000 ");
+                    break;
+            }
+        }
+        
+        // Sort handling
+        String orderColumn;
+        if ("PRICE".equalsIgnoreCase(sortBy)) {
+            orderColumn = "p.price";
+        } else {
+            // default sort by created date
+            orderColumn = "p.created_at";
+        }
+        String orderDirection = "ASC".equalsIgnoreCase(sortType) ? "ASC" : "DESC";
+        
+        String sql = "SELECT p.*, pr.provider_name, pr.provider_type " +
+                     "FROM products p " +
+                     "LEFT JOIN providers pr ON p.provider_id = pr.provider_id " +
+                     where.toString() +
+                     "ORDER BY " + orderColumn + " " + orderDirection + " " +
+                     "LIMIT ? OFFSET ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    ps.setString(idx++, (String) param);
+                } else {
+                    // fallback if we ever add other types
+                    ps.setObject(idx++, param);
+                }
+            }
+            
+            ps.setInt(idx++, limit);
+            ps.setInt(idx, offset);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapResultSetToProduct(rs));
+                }
+            }
+        }
+        
+        return products;
+    }
+
+    /**
+     * Đếm tổng số sản phẩm theo điều kiện tìm kiếm/lọc (admin)
+     */
+    public int countProductsForAdmin(String searchKeyword,
+                                     String statusFilter,
+                                     String providerType,
+                                     String priceRange) throws SQLException {
+        StringBuilder where = new StringBuilder();
+        where.append("WHERE p.is_deleted = 0 ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            where.append("AND (p.product_name LIKE ? OR p.description LIKE ?) ");
+            String pattern = "%" + searchKeyword.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+        }
+        
+        if (statusFilter != null && !"ALL".equalsIgnoreCase(statusFilter)) {
+            where.append("AND p.status = ? ");
+            params.add(statusFilter.toUpperCase());
+        }
+        
+        if (priceRange != null && !"ALL".equalsIgnoreCase(priceRange)) {
+            switch (priceRange.toUpperCase()) {
+                case "LOW":
+                    where.append("AND p.price < 100000 ");
+                    break;
+                case "MEDIUM":
+                    where.append("AND p.price BETWEEN 100000 AND 500000 ");
+                    break;
+                case "HIGH":
+                    where.append("AND p.price > 500000 ");
+                    break;
+            }
+        }
+        
+        String sql = "SELECT COUNT(*) AS total " +
+                     "FROM products p " +
+                     "LEFT JOIN providers pr ON p.provider_id = pr.provider_id " +
+                     where.toString();
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    ps.setString(idx++, (String) param);
+                } else {
+                    ps.setObject(idx++, param);
+                }
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
      * Lấy sản phẩm theo ID
      */
     public Product getProductById(int productId) throws SQLException {
@@ -120,6 +318,19 @@ public class ProductDAO {
             
             ps.setInt(1, productId);
             
+            return ps.executeUpdate() > 0;
+        }
+    }
+    
+    /**
+     * Cập nhật trạng thái hiển thị của sản phẩm
+     */
+    public boolean updateStatus(int productId, String status) throws SQLException {
+        String sql = "UPDATE products SET status = ?, updated_at = NOW() WHERE product_id = ? AND is_deleted = 0";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, productId);
             return ps.executeUpdate() > 0;
         }
     }

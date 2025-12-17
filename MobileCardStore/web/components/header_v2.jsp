@@ -116,7 +116,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center">
 
         <ul class="nav mb-2 justify-content-center mb-md-0">
-        <li><a href="dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
+        <li><a href="admin/dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
         </ul>
 
         <c:if test="${sessionScope.info != null or sessionScope.user != null}">
@@ -141,9 +141,7 @@
                 pageContext.setAttribute("avatarUrl", avatarUrl);
                 pageContext.setAttribute("defaultAvatar", defaultAvatar);
             %>
-            <div class="d-flex align-items-center">
-                <!-- Admin Badge -->
-                <span class="badge bg-danger me-3">ADMIN</span>
+           
 
                 <!-- User Dropdown with Avatar -->
                 <div class="dropdown">

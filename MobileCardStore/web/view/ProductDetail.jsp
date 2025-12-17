@@ -10,7 +10,7 @@
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body>
-        <%@include file="../components/header.jsp" %>
+        <%@include file="../components/header_v2.jsp" %>
         <div class="w-full px-4 py-6">
             <div class="max-w-6xl mx-auto">
                 <!-- Error Message -->
@@ -130,6 +130,12 @@
                                 <!-- Action Buttons -->
                                 <div class="flex gap-2">
                                     <c:choose>
+                                        <c:when test="${sessionScope.info == null and sessionScope.user == null}">
+                                            <button onclick="alert('Vui lòng đăng nhập để mua hàng!'); window.location.href='${pageContext.request.contextPath}/view/login.jsp';" 
+                                                    class="flex-1 bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors font-medium text-sm">
+                                                Đăng nhập để mua hàng
+                                            </button>
+                                        </c:when>
                                         <c:when test="${stock > 0 && product.status == 'ACTIVE'}">
                                             <button onclick="addToCart(${product.productId})" 
                                                     class="flex-1 bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors font-medium text-sm">
@@ -157,7 +163,15 @@
         <%@include file="../components/footer.jsp" %>
         
         <script>
+            <c:set var="isLoggedIn" value="${sessionScope.info != null or sessionScope.user != null}" />
             function addToCart(productId) {
+                <c:choose>
+                    <c:when test="${!isLoggedIn}">
+                        alert('Vui lòng đăng nhập để mua hàng!');
+                        window.location.href = '${pageContext.request.contextPath}/view/login.jsp';
+                        return;
+                    </c:when>
+                    <c:otherwise>
                 // TODO: Implement add to cart functionality
                 alert('Tính năng thêm vào giỏ hàng sẽ được triển khai sau. Product ID: ' + productId);
                 // You can implement AJAX call here to add product to cart
@@ -167,6 +181,8 @@
                 //     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 //     body: 'productId=' + productId
                 // })
+                    </c:otherwise>
+                </c:choose>
             }
         </script>
     </body>

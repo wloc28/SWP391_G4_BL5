@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-/*@WebServlet(name = "HomeServlet", urlPatterns = {"/home"})*/
+@WebServlet(name = "HomeServlet", urlPatterns = {"/home"})
 public class HomeServlet extends HttpServlet {
 
     private ProductDAO productDAO;
