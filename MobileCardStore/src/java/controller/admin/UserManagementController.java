@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Admin user management controller.
  */
-@WebServlet(name = "UserManagementController", urlPatterns = {"/admin/users", "/admin/user-detail"})
+@WebServlet(name = "UserManagementController", urlPatterns = {"/admin/users", "/admin/user-detail", "/admin/user-edit"})
 public class UserManagementController extends HttpServlet {
 
     private UserDAO userDAO;
@@ -30,7 +30,11 @@ public class UserManagementController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
-        if ("/admin/user-detail".equals(path)) {
+        String action = request.getParameter("action");
+        
+        if ("/admin/user-edit".equals(path) || "edit".equalsIgnoreCase(action)) {
+            handleEdit(request, response);
+        } else if ("/admin/user-detail".equals(path)) {
             handleDetail(request, response);
         } else {
             handleList(request, response);
@@ -64,7 +68,7 @@ public class UserManagementController extends HttpServlet {
         if (sortDir == null || sortDir.isEmpty()) sortDir = "DESC";
 
         int page = 1;
-        int pageSize = 12;
+        int pageSize = 10;
         try {
             page = Integer.parseInt(request.getParameter("page"));
             if (page < 1) page = 1;
@@ -92,6 +96,27 @@ public class UserManagementController extends HttpServlet {
             request.getRequestDispatcher("/view/ManageUsers.jsp").forward(request, response);
         } catch (SQLException e) {
             throw new ServletException("Error loading users", e);
+        }
+    }
+
+    private void handleEdit(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        if (idStr == null) {
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=Không tìm thấy ID người dùng.");
+            return;
+        }
+        try {
+            int userId = Integer.parseInt(idStr);
+            User user = userDAO.getUserById(userId);
+            if (user == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=Không tìm thấy người dùng.");
+                return;
+            }
+            request.setAttribute("user", user);
+            request.getRequestDispatcher("/view/ManageUserEdit.jsp").forward(request, response);
+        } catch (NumberFormatException | SQLException e) {
+            throw new ServletException("Error loading user for edit", e);
         }
     }
 
@@ -166,6 +191,8 @@ public class UserManagementController extends HttpServlet {
             java.math.BigDecimal balance = java.math.BigDecimal.ZERO;
             try {
                 balance = new java.math.BigDecimal(balanceStr);
+                // Làm tròn số dư (không có số thập phân)
+                balance = balance.setScale(0, java.math.RoundingMode.HALF_UP);
             } catch (Exception ignored) {
             }
 
@@ -179,9 +206,9 @@ public class UserManagementController extends HttpServlet {
             user.setBalance(balance);
 
             userDAO.updateUser(user);
-            response.sendRedirect(request.getContextPath() + "/admin/user-detail?id=" + userId);
+            response.sendRedirect(request.getContextPath() + "/admin/users?success=update_success");
         } catch (Exception e) {
-            throw new ServletException("Error updating user", e);
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=update_failed");
         }
     }
 }
