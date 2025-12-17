@@ -13,7 +13,7 @@
         </style>
     </head>
     <body>
-        <%@include file="../components/header.jsp" %>
+        <%@include file="../components/header_v2.jsp" %>
         <div class="w-full px-4 py-6">
             <div class="max-w-[1600px] mx-auto">
                 <h1 class="text-2xl font-semibold text-gray-900 mb-6">Danh Sách Sản Phẩm</h1>

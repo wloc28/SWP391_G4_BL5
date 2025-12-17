@@ -92,6 +92,78 @@
                 margin: 0 2px;
                 font-size: 0.85rem;
             }
+            
+            .search-form {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+            
+            .search-form .form-label {
+                font-weight: 600;
+                color: #495057;
+                font-size: 0.9rem;
+                margin-bottom: 8px;
+            }
+            
+            .search-form .form-control,
+            .search-form .form-select {
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+            }
+            
+            .search-form .form-control:focus,
+            .search-form .form-select:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            }
+            
+            .pagination-wrapper {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #dee2e6;
+            }
+            
+            .pagination-info {
+                color: #6c757d;
+                font-size: 0.9rem;
+            }
+            
+            .pagination {
+                margin: 0;
+            }
+            
+            .pagination .page-link {
+                color: #0d6efd;
+                border: 1px solid #dee2e6;
+                padding: 8px 12px;
+                margin: 0 2px;
+                border-radius: 4px;
+                transition: all 0.3s;
+            }
+            
+            .pagination .page-link:hover {
+                background-color: #e7f1ff;
+                border-color: #0d6efd;
+            }
+            
+            .pagination .page-item.active .page-link {
+                background-color: #0d6efd;
+                border-color: #0d6efd;
+                color: white;
+                font-weight: 600;
+            }
+            
+            .pagination .page-item.disabled .page-link {
+                color: #6c757d;
+                background-color: #e9ecef;
+                border-color: #dee2e6;
+                cursor: not-allowed;
+            }
         </style>
     </head>
     <body>
@@ -102,11 +174,45 @@
                 <div class="content-card-header">
                     <span><i class="bi bi-archive"></i> Quản lý Kho hàng</span>
                     <a href="${pageContext.request.contextPath}/pklist?action=add" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Thêm item mới
+                        <i class="bi bi-plus-circle"></i> Thêm thẻ mới
                     </a>
                 </div>
                 
                 <div class="content-card-body">
+                    <!-- Search Form -->
+                    <c:if test="${empty param.action || param.action == 'list'}">
+                        <div class="search-form">
+                            <form method="get" action="${pageContext.request.contextPath}/pklist">
+                                <input type="hidden" name="action" value="list">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tìm kiếm theo tên</label>
+                                        <input type="text" name="searchKeyword" class="form-control" 
+                                               placeholder="Nhập tên sản phẩm, serial, card code..." 
+                                               value="${searchKeyword}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Trạng thái</label>
+                                        <select name="status" class="form-select">
+                                            <option value="ALL" ${empty selectedStatus || selectedStatus == 'ALL' ? 'selected' : ''}>Tất cả</option>
+                                            <option value="AVAILABLE" ${selectedStatus == 'AVAILABLE' ? 'selected' : ''}>AVAILABLE</option>
+                                            <option value="SOLD" ${selectedStatus == 'SOLD' ? 'selected' : ''}>SOLD</option>
+                                            <option value="ERROR" ${selectedStatus == 'ERROR' ? 'selected' : ''}>ERROR</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5 d-flex align-items-end gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-search"></i> Tìm kiếm
+                                        </button>
+                                        <a href="${pageContext.request.contextPath}/pklist" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </c:if>
+                    
                     <c:if test="${not empty param.error}">
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="bi bi-exclamation-circle me-2"></i>
@@ -286,6 +392,60 @@
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Pagination -->
+                        <c:if test="${totalPages > 1}">
+                            <div class="pagination-wrapper">
+                                <div class="pagination-info">
+                                    Hiển thị ${(currentPage - 1) * itemsPerPage + 1} - 
+                                    ${currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage} 
+                                    trong tổng số ${totalItems} items
+                                </div>
+                                
+                                <nav>
+                                    <ul class="pagination">
+                                        <!-- Previous Button -->
+                                        <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                            <a class="page-link" 
+                                               href="?page=${currentPage - 1}&searchKeyword=${searchKeyword}&status=${selectedStatus}" 
+                                               ${currentPage == 1 ? 'tabindex="-1" aria-disabled="true"' : ''}>
+                                                <i class="bi bi-chevron-left"></i> Trước
+                                            </a>
+                                        </li>
+                                        
+                                        <!-- Page Numbers -->
+                                        <c:forEach var="i" begin="1" end="${totalPages}">
+                                            <c:choose>
+                                                <c:when test="${i == currentPage}">
+                                                    <li class="page-item active">
+                                                        <span class="page-link">${i}</span>
+                                                    </li>
+                                                </c:when>
+                                                <c:when test="${i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2)}">
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page=${i}&searchKeyword=${searchKeyword}&status=${selectedStatus}">${i}</a>
+                                                    </li>
+                                                </c:when>
+                                                <c:when test="${i == currentPage - 3 || i == currentPage + 3}">
+                                                    <li class="page-item disabled">
+                                                        <span class="page-link">...</span>
+                                                    </li>
+                                                </c:when>
+                                            </c:choose>
+                                        </c:forEach>
+                                        
+                                        <!-- Next Button -->
+                                        <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                            <a class="page-link" 
+                                               href="?page=${currentPage + 1}&searchKeyword=${searchKeyword}&status=${selectedStatus}"
+                                               ${currentPage == totalPages ? 'tabindex="-1" aria-disabled="true"' : ''}>
+                                                Sau <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </c:if>
                     </c:if>
                 </div>
             </div>

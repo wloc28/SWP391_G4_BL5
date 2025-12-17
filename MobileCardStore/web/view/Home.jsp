@@ -303,13 +303,26 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
+                                <c:choose>
+                                    <c:when test="${product.availableCount == 0}">
+                                        <a href="product-detail?id=${product.productId}"
+                                           class="btn btn-dark btn-sm w-100 mt-auto disabled">
+                                            Hết hàng
+                                        </a>
+                                    </c:when>
+                                    <c:when test="${sessionScope.info == null and sessionScope.user == null}">
+                                        <a href="${pageContext.request.contextPath}/view/login.jsp"
+                                           class="btn btn-dark btn-sm w-100 mt-auto">
+                                            Đăng nhập để mua
+                                        </a>
+                                    </c:when>
+                                    <c:otherwise>
                                 <a href="product-detail?id=${product.productId}"
-                                   class="btn btn-dark btn-sm w-100 mt-auto ${product.availableCount == 0 ?  'disabled' :  ''}">
-                                    <c:choose>
-                                        <c:when test="${product.availableCount > 0}">Mua ngay</c:when>
-                                        <c:otherwise>Hết hàng</c:otherwise>
+                                           class="btn btn-dark btn-sm w-100 mt-auto">
+                                            Mua ngay
+                                        </a>
+                                    </c:otherwise>
                                     </c:choose>
-                                </a>
                             </div>
                         </div>
                     </div>
