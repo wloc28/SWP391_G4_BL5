@@ -41,7 +41,7 @@
                     <div class="card-body">
                         <form method="post" action="${pageContext.request.contextPath}/admin/user-edit" novalidate>
                             <input type="hidden" name="userId" value="${user.userId}">
-                            
+
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Tên đăng nhập</label>
@@ -83,20 +83,31 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Số dư</label>
-                                    <input type="number" step="1" class="form-control" name="balance" 
-                                           value="${user.balance}" min="0"
-                                           ${(sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId) ? '' : 'disabled'}
-                                           placeholder="${(sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId) ? 'Nhập số dư' : 'Số dư không thể chỉnh sửa'}">
+
+                                    <!-- Input hiển thị (format VND) -->
+                                    <input type="text"
+                                           class="form-control"
+                                           id="balanceDisplay"
+                                           value="<fmt:formatNumber value='${user.balance}' type='number' groupingUsed='true'/>"
+                                           ${(sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId) ? '' : 'readonly'}
+                                           placeholder="0 ₫">
+
+                                    <!-- Input thật gửi về server -->
+                                    <input type="hidden"
+                                           name="balance"
+                                           id="balance"
+                                           value="${user.balance}">
+
                                     <c:choose>
                                         <c:when test="${sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId}">
-                                            <small class="text-muted">Bạn có thể chỉnh sửa số dư của chính mình</small>
+                                            <small class="text-muted">Bạn có thể chỉnh sửa số dư của chính mình (VND)</small>
                                         </c:when>
                                         <c:otherwise>
                                             <small class="text-muted">Số dư chỉ có thể thay đổi thông qua giao dịch</small>
                                         </c:otherwise>
                                     </c:choose>
-                                    <div class="invalid-feedback">Số dư không được âm</div>
                                 </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
                                     <input type="password" class="form-control" name="newPassword" 
@@ -104,9 +115,9 @@
                                     <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự</div>
                                 </div>
                             </div>
-                            
+
                             <hr class="my-4">
-                            
+
                             <div class="d-flex gap-3 flex-wrap">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-check-lg"></i> Lưu thay đổi
@@ -122,24 +133,24 @@
         </div>
 
         <%@include file="../components/footer.jsp" %>
-        
+
         <!-- Form validation script -->
         <script>
-        (function() {
-            'use strict';
-            window.addEventListener('load', function() {
-                var forms = document.getElementsByTagName('form');
-                var validation = Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }
-                        form.classList.add('was-validated');
-                    }, false);
-                });
-            }, false);
-        })();
+            (function () {
+                'use strict';
+                window.addEventListener('load', function () {
+                    var forms = document.getElementsByTagName('form');
+                    var validation = Array.prototype.filter.call(forms, function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
         </script>
     </body>
 </html>
