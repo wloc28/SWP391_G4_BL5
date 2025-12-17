@@ -383,6 +383,39 @@ public class ProductDAO {
 
         return result;
     }
+    
+    /**
+     * Get related products by same provider (excluding current product)
+     * @param currentProductId - ID of current product to exclude
+     * @param providerId - Provider ID to filter by
+     * @param limit - Maximum number of related products to return
+     * @return List of related products
+     */
+    public List<Product> getRelatedProducts(int currentProductId, int providerId, int limit) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT p.*, pr.provider_name, pr.provider_type, pr.image_url as provider_image_url " +
+                     "FROM products p " +
+                     "INNER JOIN providers pr ON p.provider_id = pr.provider_id " +
+                     "WHERE p.is_deleted = 0 AND p.status = 'ACTIVE' " +
+                     "AND pr.is_deleted = 0 AND pr.status = 'ACTIVE' " +
+                     "AND p.provider_id = ? AND p.product_id != ? " +
+                     "ORDER BY p.created_at DESC " +
+                     "LIMIT ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, providerId);
+            ps.setInt(2, currentProductId);
+            ps.setInt(3, limit);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(mapResultSetToProduct(rs));
+                }
+            }
+        }
+        return products;
+    }}
 
 }
-
