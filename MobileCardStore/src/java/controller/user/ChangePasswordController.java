@@ -22,7 +22,7 @@ public class ChangePasswordController extends HttpServlet {
         
         // Kiểm tra đã đăng nhập chưa
         if (session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/view/login.jsp");
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
         
@@ -46,6 +46,7 @@ public class ChangePasswordController extends HttpServlet {
             request.getRequestDispatcher("/viewProfile").forward(request, response);
             return;
         }
+        
         
         if (newPassword == null || newPassword.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập mật khẩu mới!");
