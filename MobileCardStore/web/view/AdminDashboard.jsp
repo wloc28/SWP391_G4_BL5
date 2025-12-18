@@ -499,7 +499,7 @@
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
-                        <a href="sliderslist">
+                        <a href="${pageContext.request.contextPath}/admin/orders">
                             <i class="bi bi-cart"></i>
                             <span>Quản lý đơn hàng</span>
                         </a>

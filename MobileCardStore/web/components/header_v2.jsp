@@ -96,7 +96,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
-                        <li><a class="dropdown-item" href="order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
                         <li><a class="dropdown-item" href="wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
@@ -156,7 +156,9 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
+                        <c:if test="${sessionScope.info != null and sessionScope.info.userId != null}">
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders/history/${sessionScope.info.userId}"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
+                        </c:if>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
