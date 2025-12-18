@@ -9,7 +9,7 @@
         <%@include file="../components/libs.jsp" %>
     </head>
     <body>
-        <%@include file="../components/header.jsp" %>
+        <%@include file="../components/header_v2.jsp" %>
         <div class="container py-4">
             <h2 class="mb-3">Chỉnh sửa người dùng</h2>
 
@@ -39,78 +39,91 @@
             <c:if test="${not empty user}">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <form method="post" action="${pageContext.request.contextPath}/admin/users">
-                            <input type="hidden" name="action" value="update">
+                        <form method="post" action="${pageContext.request.contextPath}/admin/user-edit" novalidate>
                             <input type="hidden" name="userId" value="${user.userId}">
-                            
-                            <div class="row mb-3">
+
+                            <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Username <span class="text-danger">*</span></label>
-                                    <input type="text" name="username" class="form-control" 
-                                           value="${user.username}" required>
+                                    <label class="form-label">Tên đăng nhập</label>
+                                    <input type="text" class="form-control" name="username" value="${user.username}" 
+                                           required minlength="3" maxlength="50" pattern="[a-zA-Z0-9_]+">
+                                    <div class="invalid-feedback">Tên đăng nhập phải có 3-50 ký tự, chỉ gồm chữ, số và dấu gạch dưới</div>
                                 </div>
-                                
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" 
-                                           value="${user.email}" disabled>
-                                    <small class="text-muted">Email không thể thay đổi</small>
+                                    <input type="email" class="form-control" name="email" value="${user.email}" required>
+                                    <div class="invalid-feedback">Vui lòng nhập địa chỉ email hợp lệ</div>
                                 </div>
-                            </div>
-                            
-                            <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Họ tên <span class="text-danger">*</span></label>
-                                    <input type="text" name="fullName" class="form-control" 
-                                           value="${user.fullName}" required>
+                                    <label class="form-label">Họ tên</label>
+                                    <input type="text" class="form-control" name="fullName" value="${user.fullName}" maxlength="100">
+                                    <div class="invalid-feedback">Họ tên không được vượt quá 100 ký tự</div>
                                 </div>
-                                
                                 <div class="col-md-6">
                                     <label class="form-label">Số điện thoại</label>
-                                    <input type="text" name="phoneNumber" class="form-control" 
-                                           value="${user.phoneNumber}">
+                                    <input type="tel" class="form-control" name="phoneNumber" value="${user.phoneNumber}" 
+                                           pattern="[0-9]{10,15}" maxlength="15">
+                                    <div class="invalid-feedback">Số điện thoại phải có 10-15 chữ số</div>
                                 </div>
-                            </div>
-                            
-                            <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Số dư <span class="text-danger">*</span></label>
-                                    <input type="number" name="balance" class="form-control" 
-                                           value="<fmt:formatNumber value="${user.balance}" type="number" maxFractionDigits="0" />" step="1" min="0" required>
-                                    <small class="text-muted">Số dư sẽ được làm tròn (không có số thập phân)</small>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <label class="form-label">Vai trò <span class="text-danger">*</span></label>
-                                    <select name="role" class="form-select" required>
-                                        <option value="ADMIN" ${user.role == 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+                                    <label class="form-label">Vai trò</label>
+                                    <select class="form-select" name="role" required>
                                         <option value="CUSTOMER" ${user.role == 'CUSTOMER' ? 'selected' : ''}>CUSTOMER</option>
+                                        <option value="ADMIN" ${user.role == 'ADMIN' ? 'selected' : ''}>ADMIN</option>
                                     </select>
+                                    <div class="invalid-feedback">Vui lòng chọn vai trò</div>
                                 </div>
-                            </div>
-                            
-                            <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                    <select name="status" class="form-select" required>
+                                    <label class="form-label">Trạng thái</label>
+                                    <select class="form-select" name="status" required>
                                         <option value="ACTIVE" ${user.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
                                         <option value="BANNED" ${user.status == 'BANNED' ? 'selected' : ''}>BANNED</option>
                                     </select>
+                                    <div class="invalid-feedback">Vui lòng chọn trạng thái</div>
                                 </div>
-                                
                                 <div class="col-md-6">
-                                    <label class="form-label">Ngày tạo</label>
-                                    <input type="text" class="form-control" 
-                                           value="<fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy HH:mm"/>" disabled>
+                                    <label class="form-label">Số dư</label>
+
+                                    <!-- Input hiển thị (format VND) -->
+                                    <input type="text"
+                                           class="form-control"
+                                           id="balanceDisplay"
+                                           value="<fmt:formatNumber value='${user.balance}' type='number' groupingUsed='true'/>"
+                                           ${(sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId) ? '' : 'readonly'}
+                                           placeholder="0 ₫">
+
+                                    <!-- Input thật gửi về server -->
+                                    <input type="hidden"
+                                           name="balance"
+                                           id="balance"
+                                           value="${user.balance}">
+
+                                    <c:choose>
+                                        <c:when test="${sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId}">
+                                            <small class="text-muted">Bạn có thể chỉnh sửa số dư của chính mình (VND)</small>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <small class="text-muted">Số dư chỉ có thể thay đổi thông qua giao dịch</small>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
+                                    <input type="password" class="form-control" name="newPassword" 
+                                           placeholder="Nhập mật khẩu mới..." minlength="6" maxlength="100">
+                                    <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự</div>
                                 </div>
                             </div>
-                            
-                            <div class="d-flex gap-2">
+
+                            <hr class="my-4">
+
+                            <div class="d-flex gap-3 flex-wrap">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-save"></i> Lưu
+                                    <i class="bi bi-check-lg"></i> Lưu thay đổi
                                 </button>
-                                <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle"></i> Hủy
+                                <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Quay lại danh sách
                                 </a>
                             </div>
                         </form>
@@ -120,6 +133,25 @@
         </div>
 
         <%@include file="../components/footer.jsp" %>
+
+        <!-- Form validation script -->
+        <script>
+            (function () {
+                'use strict';
+                window.addEventListener('load', function () {
+                    var forms = document.getElementsByTagName('form');
+                    var validation = Array.prototype.filter.call(forms, function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
+        </script>
     </body>
 </html>
 
