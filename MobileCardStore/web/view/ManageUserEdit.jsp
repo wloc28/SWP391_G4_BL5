@@ -7,6 +7,24 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Chỉnh sửa người dùng</title>
         <%@include file="../components/libs.jsp" %>
+        <style>
+            .form-control:read-only {
+                background-color: #e9ecef;
+                cursor: not-allowed;
+            }
+            
+            .is-valid {
+                border-color: #198754;
+            }
+            
+            .is-invalid {
+                border-color: #dc3545;
+            }
+            
+            #passwordMatchError {
+                display: none;
+            }
+        </style>
     </head>
     <body>
         <%@include file="../components/header_v2.jsp" %>
@@ -45,14 +63,17 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Tên đăng nhập</label>
-                                    <input type="text" class="form-control" name="username" value="${user.username}" 
-                                           required minlength="3" maxlength="50" pattern="[a-zA-Z0-9_]+">
-                                    <div class="invalid-feedback">Tên đăng nhập phải có 3-50 ký tự, chỉ gồm chữ, số và dấu gạch dưới</div>
+                                    <input type="text" class="form-control" value="${user.username}" 
+                                           readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                                    <input type="hidden" name="username" value="${user.username}">
+                                    <small class="text-muted">Tên đăng nhập không thể thay đổi</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" name="email" value="${user.email}" required>
-                                    <div class="invalid-feedback">Vui lòng nhập địa chỉ email hợp lệ</div>
+                                    <input type="email" class="form-control" value="${user.email}" 
+                                           readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                                    <input type="hidden" name="email" value="${user.email}">
+                                    <small class="text-muted">Email không thể thay đổi</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Họ tên</label>
@@ -82,6 +103,19 @@
                                     <div class="invalid-feedback">Vui lòng chọn trạng thái</div>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
+                                    <input type="password" class="form-control" name="newPassword" id="newPassword"
+                                           placeholder="Nhập mật khẩu mới..." minlength="6" maxlength="100">
+                                    <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Nhập lại mật khẩu mới</label>
+                                    <input type="password" class="form-control" name="confirmPassword" id="confirmPassword"
+                                           placeholder="Nhập lại mật khẩu mới..." minlength="6" maxlength="100">
+                                    <div class="invalid-feedback" id="passwordMatchError">Mật khẩu nhập lại không khớp</div>
+                                    <small class="text-muted">Chỉ cần nhập khi thay đổi mật khẩu</small>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label">Số dư</label>
 
                                     <!-- Input hiển thị (format VND) -->
@@ -107,13 +141,7 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
-                                    <input type="password" class="form-control" name="newPassword" 
-                                           placeholder="Nhập mật khẩu mới..." minlength="6" maxlength="100">
-                                    <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự</div>
-                                </div>
+                                
                             </div>
 
                             <hr class="my-4">
@@ -140,15 +168,99 @@
                 'use strict';
                 window.addEventListener('load', function () {
                     var forms = document.getElementsByTagName('form');
-                    var validation = Array.prototype.filter.call(forms, function (form) {
-                        form.addEventListener('submit', function (event) {
-                            if (form.checkValidity() === false) {
-                                event.preventDefault();
-                                event.stopPropagation();
+                    var form = forms[0];
+                    if (!form) return;
+                    
+                    var newPasswordInput = document.getElementById('newPassword');
+                    var confirmPasswordInput = document.getElementById('confirmPassword');
+                    var passwordMatchError = document.getElementById('passwordMatchError');
+                    var formValidated = false;
+                        
+                    // Password match validation - only show errors after form submission
+                    function validatePasswordMatch(showErrors) {
+                        if (!newPasswordInput || !confirmPasswordInput) return true;
+                        
+                        var newPassword = newPasswordInput.value.trim();
+                        var confirmPassword = confirmPasswordInput.value.trim();
+                        
+                        // Reset validation state
+                        confirmPasswordInput.classList.remove('is-invalid', 'is-valid');
+                        if (passwordMatchError) passwordMatchError.style.display = 'none';
+                        
+                        // If new password is provided, confirm password must match
+                        if (newPassword.length > 0) {
+                            if (confirmPassword.length === 0) {
+                                if (showErrors) {
+                                    confirmPasswordInput.classList.add('is-invalid');
+                                    if (passwordMatchError) {
+                                        passwordMatchError.textContent = 'Vui lòng nhập lại mật khẩu mới';
+                                        passwordMatchError.style.display = 'block';
+                                    }
+                                }
+                                return false;
+                            } else if (newPassword !== confirmPassword) {
+                                if (showErrors) {
+                                    confirmPasswordInput.classList.add('is-invalid');
+                                    if (passwordMatchError) {
+                                        passwordMatchError.textContent = 'Mật khẩu nhập lại không khớp';
+                                        passwordMatchError.style.display = 'block';
+                                    }
+                                }
+                                return false;
+                            } else {
+                                if (showErrors) {
+                                    confirmPasswordInput.classList.add('is-valid');
+                                }
+                                return true;
                             }
+                        } else {
+                            // If new password is empty, confirm password should also be empty
+                            if (confirmPassword.length > 0) {
+                                if (showErrors) {
+                                    confirmPasswordInput.classList.add('is-invalid');
+                                    if (passwordMatchError) {
+                                        passwordMatchError.textContent = 'Vui lòng nhập mật khẩu mới trước';
+                                        passwordMatchError.style.display = 'block';
+                                    }
+                                }
+                                return false;
+                            }
+                            return true;
+                        }
+                    }
+                    
+                    // Real-time validation - only show visual feedback after form has been submitted
+                    if (newPasswordInput && confirmPasswordInput) {
+                        newPasswordInput.addEventListener('input', function() {
+                            if (formValidated) {
+                                validatePasswordMatch(true);
+                            }
+                        });
+                        
+                        confirmPasswordInput.addEventListener('input', function() {
+                            if (formValidated) {
+                                validatePasswordMatch(true);
+                            }
+                        });
+                    }
+                    
+                    form.addEventListener('submit', function (event) {
+                        formValidated = true;
+                        
+                        // Validate password match before form validation
+                        if (!validatePasswordMatch(true)) {
+                            event.preventDefault();
+                            event.stopPropagation();
                             form.classList.add('was-validated');
-                        }, false);
-                    });
+                            return false;
+                        }
+                        
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
                 }, false);
             })();
         </script>
