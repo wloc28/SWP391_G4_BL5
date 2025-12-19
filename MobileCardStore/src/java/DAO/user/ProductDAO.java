@@ -4,6 +4,7 @@ import DAO.DBConnection;
 import Models.Product;
 import Models.Provider;
 import Models.ProductWithStock;
+import Models.ProductDisplay;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -416,6 +417,107 @@ public class ProductDAO {
             }
         }
         return products;
-    }}
+    }
+    
+    /**
+     * Get ProductDisplay by product_code and provider_id
+     * Query from product_storage joined with products and providers
+     */
+    public ProductDisplay getProductByCode(String productCode, int providerId) throws SQLException {
+        // Query từ product_storage join với products và providers
+        // Tìm product có product_code tương ứng (có thể từ provider_storage hoặc từ một mapping table)
+        // Tạm thời, tôi sẽ query từ products dựa trên product_name hoặc một cách khác
+        // Nhưng vì không có product_code trong products, tôi sẽ query từ product_storage
+        // với điều kiện là product_code được lưu trong serial_number hoặc card_code
+        // Hoặc query từ provider_storage nếu có
+        
+        // Cách 1: Query từ provider_storage (nếu product_code được lưu ở đây)
+        String sql = """
+            SELECT 
+                ps.provider_storage_id,
+                ps.provider_id,
+                ps.product_code,
+                ps.product_name,
+                ps.price,
+                ps.purchase_price,
+                pr.provider_name,
+                pr.provider_type,
+                (SELECT COUNT(*) FROM product_storage pst 
+                 JOIN products p ON pst.product_id = p.product_id
+                 WHERE p.provider_id = ps.provider_id 
+                 AND p.product_name = ps.product_name
+                 AND pst.status = 'AVAILABLE' 
+                 AND pst.is_deleted = 0) AS available_count
+            FROM provider_storage ps
+            JOIN providers pr ON ps.provider_id = pr.provider_id
+            WHERE ps.product_code = ? AND ps.provider_id = ? 
+            AND ps.is_deleted = 0 AND ps.status = 'ACTIVE'
+            LIMIT 1
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, productCode);
+            ps.setInt(2, providerId);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ProductDisplay product = new ProductDisplay();
+                    product.setProductCode(rs.getString("product_code"));
+                    product.setProductName(rs.getString("product_name"));
+                    product.setProviderId(rs.getInt("provider_id"));
+                    product.setProviderName(rs.getString("provider_name"));
+                    product.setProviderType(rs.getString("provider_type"));
+                    product.setPrice(rs.getBigDecimal("price"));
+                    product.setPurchasePrice(rs.getBigDecimal("purchase_price"));
+                    product.setAvailableCount(rs.getInt("available_count"));
+                    product.setStatus("ACTIVE");
+                    return product;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get available stock count by product_code and provider_id
+     */
+    public int getAvailableStock(String productCode, int providerId) throws SQLException {
+        // Query từ product_storage join với products
+        // Tìm số lượng available dựa trên product_code và provider_id
+        // Join với provider_storage để lấy product_code
+        String sql = """
+            SELECT COUNT(*) as count
+            FROM product_storage pst
+            JOIN products p ON pst.product_id = p.product_id
+            JOIN provider_storage ps ON p.provider_id = ps.provider_id 
+                AND p.product_name = ps.product_name
+            WHERE ps.product_code = ? 
+            AND ps.provider_id = ?
+            AND pst.status = 'AVAILABLE' 
+            AND pst.is_deleted = 0
+            AND p.is_deleted = 0
+            AND p.status = 'ACTIVE'
+            AND ps.is_deleted = 0
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, productCode);
+            ps.setInt(2, providerId);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count");
+                }
+            }
+        }
+        
+        return 0;
+    }
+}
 
 

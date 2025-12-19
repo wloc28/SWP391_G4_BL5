@@ -118,63 +118,34 @@ public class ProviderDAO {
      * @param providerId ID của provider product
      * @param quantity Số lượng cần giảm
      * @return true nếu thành công, false nếu không đủ số lượng
+     * @deprecated Bảng providers không có cột quantity. Method này không hoạt động.
      */
+    @Deprecated
     public boolean decreaseQuantity(int providerId, int quantity) throws SQLException {
-        // Kiểm tra số lượng đủ không
-        Provider provider = getProviderProductById(providerId);
-        if (provider == null || provider.getQuantity() < quantity) {
-            return false;
-        }
-        
-        String sql = "UPDATE providers SET quantity = quantity - ?, updated_at = NOW() " +
-                     "WHERE provider_id = ? AND quantity >= ? AND is_deleted = 0";
-        
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setInt(1, quantity);
-            ps.setInt(2, providerId);
-            ps.setInt(3, quantity);
-            
-            return ps.executeUpdate() > 0;
-        }
+        // Bảng providers không có cột quantity
+        // Method này không thể thực hiện được với cấu trúc hiện tại
+        return false;
     }
     
     /**
      * Tăng số lượng (nếu cần nhập thêm vào provider)
+     * @deprecated Bảng providers không có cột quantity. Method này không hoạt động.
      */
+    @Deprecated
     public boolean increaseQuantity(int providerId, int quantity) throws SQLException {
-        String sql = "UPDATE providers SET quantity = quantity + ?, updated_at = NOW() " +
-                     "WHERE provider_id = ? AND is_deleted = 0";
-        
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setInt(1, quantity);
-            ps.setInt(2, providerId);
-            
-            return ps.executeUpdate() > 0;
-        }
+        // Bảng providers không có cột quantity
+        // Method này không thể thực hiện được với cấu trúc hiện tại
+        return false;
     }
     
     /**
      * Lấy số lượng hiện có
+     * @deprecated Bảng providers không có cột quantity. Method này không hoạt động.
      */
+    @Deprecated
     public int getAvailableQuantity(int providerId) throws SQLException {
-        String sql = "SELECT quantity FROM providers WHERE provider_id = ? AND is_deleted = 0";
-        
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setInt(1, providerId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("quantity");
-                }
-            }
-        }
-        
+        // Bảng providers không có cột quantity
+        // Method này không thể thực hiện được với cấu trúc hiện tại
         return 0;
     }
     
@@ -207,17 +178,6 @@ public class ProviderDAO {
         provider.setProviderId(rs.getInt("provider_id"));
         provider.setProviderName(rs.getString("provider_name"));
         provider.setProviderType(rs.getString("provider_type"));
-        provider.setProductCode(rs.getString("product_code"));
-        provider.setProductName(rs.getString("product_name"));
-        
-        if (rs.getObject("price") != null) {
-            provider.setPrice(rs.getBigDecimal("price"));
-        }
-        if (rs.getObject("purchase_price") != null) {
-            provider.setPurchasePrice(rs.getBigDecimal("purchase_price"));
-        }
-        
-        provider.setQuantity(rs.getInt("quantity"));
         provider.setImageUrl(rs.getString("image_url"));
         provider.setStatus(rs.getString("status"));
         provider.setCreatedAt(rs.getTimestamp("created_at"));
