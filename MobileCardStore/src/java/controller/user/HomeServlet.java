@@ -2,7 +2,7 @@ package controller.user;
 
 import DAO.user.ProductDAO;
 import Models.Provider;
-import Models.ProductWithStock;
+import Models.ProductDisplay;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet. http.HttpServlet;
@@ -35,16 +35,30 @@ public class HomeServlet extends HttpServlet {
             List<Provider> providers = productDAO.getAllProviders();
             request.setAttribute("providers", providers);
 
-            Map<Provider, List<ProductWithStock>> productsByProvider =
-                    productDAO. getProductsGroupedByProvider();
-            request. setAttribute("productsByProvider", productsByProvider);
+            Map<Provider, List<ProductDisplay>> productsByProvider =
+                    productDAO.getProductsGroupedByProvider();
+            
+            // Debug logging
+            System.out.println("HomeServlet: Found " + productsByProvider.size() + " providers with products");
+            for (Provider p : productsByProvider.keySet()) {
+                System.out.println("  Provider: " + p.getProviderName() + " - " + productsByProvider.get(p).size() + " products");
+            }
+            
+            request.setAttribute("productsByProvider", productsByProvider);
 
             request.getRequestDispatcher("/view/Home.jsp").forward(request, response);
 
         } catch (SQLException e) {
-            System.err.println("HomeServlet Error: " + e.getMessage());
+            System.err.println("HomeServlet SQL Error: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("error", "Không thể tải dữ liệu. Lỗi: " + e.getMessage());
+            request.setAttribute("productsByProvider", new java.util.LinkedHashMap<>());
+            request.getRequestDispatcher("/view/Home.jsp").forward(request, response);
+        } catch (Exception e) {
+            System.err.println("HomeServlet General Error: " + e.getMessage());
             e.printStackTrace();
             request.setAttribute("error", "Không thể tải dữ liệu. Vui lòng thử lại sau.");
+            request.setAttribute("productsByProvider", new java.util.LinkedHashMap<>());
             request.getRequestDispatcher("/view/Home.jsp").forward(request, response);
         }
     }
