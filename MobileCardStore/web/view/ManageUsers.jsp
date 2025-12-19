@@ -282,16 +282,10 @@
                         keywordInput.classList.remove('border-danger');
                         invalidFeedback.classList.add('hidden');
                         
-                        // Validate keyword input - only allow letters, numbers, @, ., and spaces
+                        // Validate keyword input - allow letters, numbers, @, ., _, %, and spaces
                         if (keywordValue) {
-                            // Check for invalid characters (anything except letters, numbers, @, ., and spaces)
-                            if (!/^[a-zA-Z0-9@.\s]*$/.test(keywordValue)) {
-                                keywordInput.classList.add('border-danger');
-                                invalidFeedback.classList.remove('hidden');
-                                isValid = false;
-                            }
                             // Check if it's only spaces
-                            else if (keywordValue.length === 0) {
+                            if (keywordValue.length === 0) {
                                 keywordInput.value = ''; // Clear empty spaces
                             }
                             // Check minimum length (at least 1 actual character)
@@ -310,15 +304,8 @@
                         }
                     }, false);
                     
-                    // Real-time validation on input
+                    // Real-time validation on input - allow all characters including _ and %
                     keywordInput.addEventListener('input', function() {
-                        var value = this.value;
-                        // Remove invalid characters as user types
-                        var cleaned = value.replace(/[^a-zA-Z0-9@.\s]/g, '');
-                        if (value !== cleaned) {
-                            this.value = cleaned;
-                        }
-                        
                         // Reset error state when user fixes input
                         if (this.classList.contains('border-danger')) {
                             this.classList.remove('border-danger');
