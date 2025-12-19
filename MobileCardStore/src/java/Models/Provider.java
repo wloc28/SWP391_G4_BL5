@@ -1,5 +1,6 @@
 package Models;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -10,6 +11,11 @@ public class Provider {
     private int providerId;
     private String providerName;
     private String providerType; // 'TEL' or 'GAME'
+    private String productCode; // Mã sản phẩm fix cứng (VD: VT10K, VN20K)
+    private String productName; // Tên sản phẩm (VD: Thẻ 10.000đ)
+    private BigDecimal price; // Giá bán cho khách hàng
+    private BigDecimal purchasePrice; // Giá nhập từ provider
+    private int quantity; // Số lượng hàng còn ở provider
     private String imageUrl;
     private String status; // 'ACTIVE' or 'INACTIVE'
     private Timestamp createdAt;
@@ -94,12 +100,57 @@ public class Provider {
         isDeleted = deleted;
     }
     
+    public String getProductCode() {
+        return productCode;
+    }
+    
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+    
+    public String getProductName() {
+        return productName;
+    }
+    
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    
+    public BigDecimal getPrice() {
+        return price;
+    }
+    
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+    
+    public BigDecimal getPurchasePrice() {
+        return purchasePrice;
+    }
+    
+    public void setPurchasePrice(BigDecimal purchasePrice) {
+        this.purchasePrice = purchasePrice;
+    }
+    
+    public int getQuantity() {
+        return quantity;
+    }
+    
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+    
     @Override
     public String toString() {
         return "Provider{" +
                 "providerId=" + providerId +
                 ", providerName='" + providerName + '\'' +
                 ", providerType='" + providerType + '\'' +
+                ", productCode='" + productCode + '\'' +
+                ", productName='" + productName + '\'' +
+                ", price=" + price +
+                ", purchasePrice=" + purchasePrice +
+                ", quantity=" + quantity +
                 ", status='" + status + '\'' +
                 '}';
     }

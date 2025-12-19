@@ -201,30 +201,48 @@
                                     <c:forEach var="product" items="${products}">
                                         <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
                                             <c:choose>
-                                                <c:when test="${not empty product.imageUrl}">
-                                                    <img src="${product.imageUrl}" class="w-full h-48 object-cover bg-gray-100" 
+                                                <c:when test="${not empty product.providerImageUrl}">
+                                                    <img src="${product.providerImageUrl}" class="w-full h-48 object-contain bg-gray-100 p-4" 
                                                          alt="${product.productName}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <img src="https://via.placeholder.com/300x200?text=No+Image" 
-                                                         class="w-full h-48 object-cover bg-gray-100" alt="${product.productName}">
+                                                    <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
+                                                        <i class="bi bi-credit-card-2-front" style="font-size: 3rem; color: #6c757d;"></i>
+                                                    </div>
                                                 </c:otherwise>
                                             </c:choose>
                                             <div class="p-4 flex flex-col flex-grow">
                                                 <h3 class="text-base font-semibold text-gray-900 mb-2 line-clamp-2">${product.productName}</h3>
                                                 <div class="flex gap-2 mb-2">
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${product.provider.providerName}</span>
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${product.provider.providerType}</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${product.providerName}</span>
+                                                    <c:if test="${not empty product.providerType}">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                            <c:choose>
+                                                                <c:when test="${product.providerType == 'TEL'}">Thẻ điện thoại</c:when>
+                                                                <c:when test="${product.providerType == 'GAME'}">Thẻ game</c:when>
+                                                                <c:otherwise>${product.providerType}</c:otherwise>
+                                                            </c:choose>
+                                                        </span>
+                                                    </c:if>
                                                 </div>
-                                                <p class="text-lg font-bold text-gray-900 mb-3">
+                                                <p class="text-lg font-bold text-gray-900 mb-2">
                                                     <fmt:formatNumber value="${product.price}" type="number" maxFractionDigits="0" /> đ
                                                 </p>
-                                                <c:if test="${not empty product.description}">
-                                                    <p class="text-xs text-gray-600 mb-3 flex-grow line-clamp-2">
-                                                        ${product.description.length() > 100 ? product.description.substring(0, 100) + '...' : product.description}
-                                                    </p>
-                                                </c:if>
-                                                <a href="product-detail?id=${product.productId}" class="mt-auto w-full bg-gray-900 text-white text-center px-3 py-2 rounded hover:bg-gray-800 transition-colors font-medium text-sm">
+                                                <div class="mb-3">
+                                                    <c:choose>
+                                                        <c:when test="${product.availableCount > 0}">
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                Còn ${product.availableCount} thẻ
+                                                            </span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                                Hết hàng
+                                                            </span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                                <a href="product-detail?code=${product.productCode}&providerId=${product.providerId}" class="mt-auto w-full bg-gray-900 text-white text-center px-3 py-2 rounded hover:bg-gray-800 transition-colors font-medium text-sm">
                                                     Xem chi tiết
                                                 </a>
                                             </div>

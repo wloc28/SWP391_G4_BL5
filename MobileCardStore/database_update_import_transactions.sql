@@ -31,3 +31,4 @@ CREATE TABLE `import_transactions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+
