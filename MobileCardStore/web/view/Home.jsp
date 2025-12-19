@@ -174,46 +174,8 @@
         </div>
     </c:if>
 
-    <!-- Quick Navigation:  Provider Cards -->
-    <section class="mb-5">
-        <h2 class="section-title">Nhà Cung Cấp</h2>
-        <div class="row g-3">
-            <c:forEach var="provider" items="${providers}">
-                <div class="col-6 col-md-4 col-lg-2">
-                    <a href="products?providerId=${provider.providerId}" class="text-decoration-none">
-                        <div class="card provider-card h-100">
-                            <div class="card-body">
-                                <c:choose>
-                                    <c:when test="${not empty provider.imageUrl}">
-                                        <img src="${provider.imageUrl}" alt="${provider.providerName}" class="provider-icon">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div class="provider-icon-placeholder">
-                                            <c:choose>
-                                                <c:when test="${provider.providerType == 'TEL'}">
-                                                    <i class="bi bi-phone" style="font-size: 2rem;"></i>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <i class="bi bi-controller" style="font-size: 2rem;"></i>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                    </c:otherwise>
-                                </c:choose>
-                                <h6 class="card-title mb-1 text-dark">${provider.providerName}</h6>
-                                <small class="text-muted">
-                                    <c:choose>
-                                        <c:when test="${provider.providerType == 'TEL'}">Điện thoại</c:when>
-                                        <c:otherwise>Game</c:otherwise>
-                                    </c:choose>
-                                </small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </c:forEach>
-        </div>
-    </section>
+
+    
 
     <!-- Products Grouped by Provider -->
     <section>
@@ -268,11 +230,12 @@
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="card product-card ${product.availableCount == 0 ? 'out-of-stock' : ''}">
                             <c:choose>
-                            <c:when test="${not empty product.imageUrl}">
-                                <img src="${product.imageUrl}" class="card-img-top" alt="${product.productName}">
+                            <c:when test="${not empty product.providerImageUrl}">
+                                <img src="${product.providerImageUrl}" class="card-img-top" alt="${product.productName}" 
+                                     style="height: 200px; object-fit: contain; padding: 10px;">
                             </c:when>
                             <c:otherwise>
-                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light">
+                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
                                     <c:choose>
                                         <c:when test="${product.providerType == 'TEL'}">
                                             <i class="bi bi-credit-card-2-front" style="font-size: 3rem; color: #6c757d;"></i>
@@ -305,10 +268,9 @@
                                 </div>
                                 <c:choose>
                                     <c:when test="${product.availableCount == 0}">
-                                        <a href="product-detail?id=${product.productId}"
-                                           class="btn btn-dark btn-sm w-100 mt-auto disabled">
+                                        <button class="btn btn-secondary btn-sm w-100 mt-auto" disabled>
                                             Hết hàng
-                                        </a>
+                                        </button>
                                     </c:when>
                                     <c:when test="${sessionScope.info == null and sessionScope.user == null}">
                                         <a href="${pageContext.request.contextPath}/view/login.jsp"
@@ -317,12 +279,22 @@
                                         </a>
                                     </c:when>
                                     <c:otherwise>
-                                <a href="product-detail?id=${product.productId}"
-                                           class="btn btn-dark btn-sm w-100 mt-auto">
-                                            Mua ngay
-                                        </a>
+                                        <div class="d-flex gap-1 mt-auto">
+                                            <a href="product-detail?code=${product.productCode}&providerId=${product.providerId}"
+                                               class="btn btn-outline-primary btn-sm flex-fill">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </a>
+                                            <button onclick="addToCart('${product.productCode}', ${product.providerId}, 1)"
+                                                    class="btn btn-outline-success btn-sm flex-fill">
+                                                <i class="bi bi-cart-plus"></i> Thêm
+                                            </button>
+                                            <button onclick="buyNow('${product.productCode}', ${product.providerId})"
+                                                    class="btn btn-dark btn-sm flex-fill">
+                                                <i class="bi bi-bag-check"></i> Mua ngay
+                                            </button>
+                                        </div>
                                     </c:otherwise>
-                                    </c:choose>
+                                </c:choose>
                             </div>
                         </div>
                     </div>
@@ -337,5 +309,107 @@
 </div>
 
 <%@include file="../components/footer.jsp" %>
+
+<script>
+    <c:set var="isLoggedIn" value="${sessionScope.info != null or sessionScope.user != null}" />
+    <c:set var="contextPath" value="${pageContext.request.contextPath}" />
+    
+    function addToCart(productCode, providerId, quantity) {
+        <c:if test="${!isLoggedIn}">
+            alert('Vui lòng đăng nhập để mua hàng!');
+            window.location.href = '${contextPath}/view/login.jsp';
+            return;
+        </c:if>
+        
+        console.log('Adding to cart:', productCode, providerId, quantity);
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '${contextPath}/cart';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'add';
+        form.appendChild(actionInput);
+        
+        const productCodeInput = document.createElement('input');
+        productCodeInput.type = 'hidden';
+        productCodeInput.name = 'productCode';
+        productCodeInput.value = productCode;
+        form.appendChild(productCodeInput);
+        
+        const providerIdInput = document.createElement('input');
+        providerIdInput.type = 'hidden';
+        providerIdInput.name = 'providerId';
+        providerIdInput.value = providerId;
+        form.appendChild(providerIdInput);
+        
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'hidden';
+        quantityInput.name = 'quantity';
+        quantityInput.value = quantity || 1;
+        form.appendChild(quantityInput);
+        
+        const redirectInput = document.createElement('input');
+        redirectInput.type = 'hidden';
+        redirectInput.name = 'redirect';
+        redirectInput.value = window.location.href.split('?')[0];
+        form.appendChild(redirectInput);
+        
+        document.body.appendChild(form);
+        console.log('Submitting form to:', form.action);
+        form.submit();
+    }
+    
+    function buyNow(productCode, providerId) {
+        <c:if test="${!isLoggedIn}">
+            alert('Vui lòng đăng nhập để mua hàng!');
+            window.location.href = '${contextPath}/view/login.jsp';
+            return;
+        </c:if>
+        
+        console.log('Buy now:', productCode, providerId);
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '${contextPath}/cart';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'add';
+        form.appendChild(actionInput);
+        
+        const productCodeInput = document.createElement('input');
+        productCodeInput.type = 'hidden';
+        productCodeInput.name = 'productCode';
+        productCodeInput.value = productCode;
+        form.appendChild(productCodeInput);
+        
+        const providerIdInput = document.createElement('input');
+        providerIdInput.type = 'hidden';
+        providerIdInput.name = 'providerId';
+        providerIdInput.value = providerId;
+        form.appendChild(providerIdInput);
+        
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'hidden';
+        quantityInput.name = 'quantity';
+        quantityInput.value = '1';
+        form.appendChild(quantityInput);
+        
+        const redirectInput = document.createElement('input');
+        redirectInput.type = 'hidden';
+        redirectInput.name = 'redirect';
+        redirectInput.value = '${contextPath}/cart';
+        form.appendChild(redirectInput);
+        
+        document.body.appendChild(form);
+        console.log('Submitting form to:', form.action);
+        form.submit();
+    }
+</script>
+
 </body>
 </html>

@@ -639,73 +639,23 @@
                             </div>
                         </div>
                         
-                        <!-- Order Actions (Only for Admin) -->
-                        <c:if test="${sessionScope.info.role == 'ADMIN'}">
-                            <div class="detail-card">
-                                <div class="detail-card-header">
-                                    <h5><i class="bi bi-gear"></i> Thao tác</h5>
-                                </div>
-                                <div class="detail-card-body">
-                                    <div class="action-buttons">
-                                        <!-- Status Update Forms -->
-                                        <c:if test="${order.status eq 'PENDING'}">
-                                            <form method="POST" action="${pageContext.request.contextPath}/admin/orders" style="display: inline;">
-                                                <input type="hidden" name="action" value="updateStatus">
-                                                <input type="hidden" name="orderId" value="${order.orderId}">
-                                                <input type="hidden" name="status" value="PROCESSING">
-                                                <button type="submit" class="btn btn-warning">
-                                                    <i class="bi bi-play-circle"></i> Bắt đầu xử lý
-                                                </button>
-                                            </form>
-                                        </c:if>
-                                        
-                                        <c:if test="${order.status eq 'PROCESSING'}">
-                                            <form method="POST" action="${pageContext.request.contextPath}/admin/orders" style="display: inline;">
-                                                <input type="hidden" name="action" value="updateStatus">
-                                                <input type="hidden" name="orderId" value="${order.orderId}">
-                                                <input type="hidden" name="status" value="COMPLETED">
-                                                <button type="submit" class="btn btn-success">
-                                                    <i class="bi bi-check-circle"></i> Hoàn thành
-                                                </button>
-                                            </form>
-                                            
-                                            <form method="POST" action="${pageContext.request.contextPath}/admin/orders" style="display: inline;">
-                                                <input type="hidden" name="action" value="updateStatus">
-                                                <input type="hidden" name="orderId" value="${order.orderId}">
-                                                <input type="hidden" name="status" value="FAILED">
-                                                <button type="submit" class="btn btn-danger" 
-                                                        onclick="return confirm('Bạn có chắc chắn muốn đánh dấu đơn hàng này là thất bại?')">
-                                                    <i class="bi bi-x-circle"></i> Đánh dấu thất bại
-                                                </button>
-                                            </form>
-                                        </c:if>
-                                        
-                                        <c:if test="${order.status eq 'COMPLETED' or order.status eq 'FAILED'}">
-                                            <div class="alert alert-info mb-3">
-                                                <i class="bi bi-info-circle"></i> 
-                                                Đơn hàng đã kết thúc (${order.status eq 'COMPLETED' ? 'Hoàn thành' : 'Thất bại'}), không thể thay đổi trạng thái.
-                                            </div>
-                                        </c:if>
-                                        
-                                        <!-- Back to Orders List -->
+                        <!-- Back Button -->
+                        <div class="detail-card">
+                            <div class="detail-card-body">
+                                <c:choose>
+                                    <c:when test="${sessionScope.info.role == 'ADMIN'}">
                                         <a href="${pageContext.request.contextPath}/admin/orders" class="btn btn-secondary">
                                             <i class="bi bi-arrow-left"></i> Quay lại danh sách
                                         </a>
-                                    </div>
-                                </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a href="${pageContext.request.contextPath}/order-history" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left"></i> Quay lại lịch sử đơn hàng
+                                        </a>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
-                        </c:if>
-                        
-                        <!-- Back Button for Regular Users -->
-                        <c:if test="${sessionScope.info.role != 'ADMIN'}">
-                            <div class="detail-card">
-                                <div class="detail-card-body">
-                                    <a href="${pageContext.request.contextPath}/order-history" class="btn btn-secondary">
-                                        <i class="bi bi-arrow-left"></i> Quay lại lịch sử đơn hàng
-                                    </a>
-                                </div>
-                            </div>
-                        </c:if>
+                        </div>
                         
                         <!-- Order Timeline -->
                         <div class="detail-card">

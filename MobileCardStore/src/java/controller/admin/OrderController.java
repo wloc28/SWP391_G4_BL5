@@ -116,6 +116,21 @@ public class OrderController extends HttpServlet {
             }
         }
         
+        String pageSizeParam = request.getParameter("pageSize");
+        if (pageSizeParam != null && !pageSizeParam.trim().isEmpty()) {
+            try {
+                int requestedPageSize = Integer.parseInt(pageSizeParam);
+                // Validate pageSize - only allow valid values
+                if (requestedPageSize == 10 || requestedPageSize == 15 || 
+                    requestedPageSize == 20 || requestedPageSize == 50 || 
+                    requestedPageSize == 100) {
+                    pageSize = requestedPageSize;
+                }
+            } catch (NumberFormatException e) {
+                // Keep default pageSize = 15
+            }
+        }
+        
         // Get search and filter parameters
         String searchTerm = request.getParameter("search");
         String statusFilter = request.getParameter("status");
@@ -125,14 +140,9 @@ public class OrderController extends HttpServlet {
         String sortBy = request.getParameter("sortBy");
         String sortDir = request.getParameter("sortDir");
         
-        // Sanitize and validate search term - remove invalid characters
+        // Sanitize search term - only trim whitespace, allow _ and % characters
         if (searchTerm != null) {
-            // Remove _ and % characters, only allow alphanumeric, @, ., space, and common email characters
-            searchTerm = searchTerm.trim().replaceAll("[_%]", "");
-            // Only allow alphanumeric, @, ., space, -, and +
-            if (!searchTerm.matches("^[a-zA-Z0-9@.\\s\\-+]*$")) {
-                searchTerm = searchTerm.replaceAll("[^a-zA-Z0-9@.\\s\\-+]", "");
-            }
+            searchTerm = searchTerm.trim();
         }
         
         if (statusFilter != null) {

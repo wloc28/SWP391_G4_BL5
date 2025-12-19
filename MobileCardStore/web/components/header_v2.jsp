@@ -18,8 +18,8 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center">
 
     <ul class="nav mb-2 justify-content-center mb-md-0">
-    <li><a href="home" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
-    <li><a href="products" class="nav-link px-2 text-secondary">Sản phẩm</a></li>
+    <li><a href="${pageContext.request.contextPath}/home" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
+    <li><a href="${pageContext.request.contextPath}/products" class="nav-link px-2 text-secondary">Sản phẩm</a></li>
     </ul>
 
     <!-- Not logged in:  Show Login/Register buttons -->
@@ -153,7 +153,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center">
 
         <ul class="nav mb-2 justify-content-center mb-md-0">
-        <li><a href="admin/dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
+        <li><a href="${pageContext.request.contextPath}/admin/dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
         </ul>
 
         <c:if test="${sessionScope.info != null or sessionScope.user != null}">
