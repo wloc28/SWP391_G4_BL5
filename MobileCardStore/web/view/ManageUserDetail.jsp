@@ -9,7 +9,7 @@
         <%@include file="../components/libs.jsp" %>
     </head>
     <body>
-        <%@include file="../components/header.jsp" %>
+        <%@include file="../components/header_v2.jsp" %>
         <div class="container py-4">
             <h2 class="mb-3">Chi tiết người dùng</h2>
 
@@ -19,7 +19,7 @@
 
             <c:if test="${not empty user}">
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-12">
                         <div class="card shadow-sm mb-3">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -61,30 +61,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card shadow-sm mb-3">
-                            <div class="card-body">
-                                <h6 class="card-title">Hành động</h6>
-                                <form method="post" action="${pageContext.request.contextPath}/admin/users" id="statusForm">
-                                    <input type="hidden" name="action" value="status">
-                                    <input type="hidden" name="userId" value="${user.userId}">
-                                    <input type="hidden" name="redirect" value="detail">
-                                    <c:choose>
-                                        <c:when test="${user.status == 'ACTIVE'}">
-                                            <input type="hidden" name="status" value="BANNED">
-                                            <button type="button" onclick="confirmStatusChange('${user.userId}', 'BANNED', '${user.username}', 'khoá')" class="btn btn-danger w-100 mb-2">Khoá tài khoản</button>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <input type="hidden" name="status" value="ACTIVE">
-                                            <button type="button" onclick="confirmStatusChange('${user.userId}', 'ACTIVE', '${user.username}', 'mở khoá')" class="btn btn-success w-100 mb-2">Mở khoá tài khoản</button>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </form>
-                                <a href="${pageContext.request.contextPath}/admin/user-edit?id=${user.userId}" class="btn btn-warning w-100 mb-2">Chỉnh sửa</a>
-                                <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary w-100">Quay lại danh sách</a>
-                            </div>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -92,33 +72,7 @@
         </div>
 
         <%@include file="../components/footer.jsp" %>
-        <script>
-            function confirmStatusChange(userId, newStatus, username, action) {
-                Swal.fire({
-                    title: 'Xác nhận',
-                    text: 'Bạn có chắc chắn muốn ' + action + ' tài khoản "' + username + '" không?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: newStatus === 'BANNED' ? '#d33' : '#28a745',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Xác nhận',
-                    cancelButtonText: 'Hủy'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('statusForm').submit();
-                    }
-                });
-            }
-        </script>
-        <c:if test="${param.selfBan == 'true'}">
-            <script>
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Không thể khoá tài khoản của chính bạn',
-                    confirmButtonText: 'OK'
-                });
-            </script>
-        </c:if>
+        <!-- Hành động khoá/chỉnh sửa đã được loại bỏ để đồng bộ với các trang quản lý khác -->
     </body>
 </html>
 

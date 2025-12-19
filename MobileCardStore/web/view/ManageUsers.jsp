@@ -38,6 +38,51 @@
             .badge-role { background: #e0f2fe; color: #0b4f8a; }
             .badge-status-active { background: #d1fae5; color: #065f46; }
             .badge-status-banned { background: #fee2e2; color: #991b1b; }
+
+            /* Unified styles with ManageStorage */
+            .search-form {
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }
+            .search-form .form-label {
+                font-weight: 600;
+                color: #495057;
+                font-size: 0.9rem;
+                margin-bottom: 8px;
+            }
+            .search-form .form-control,
+            .search-form .form-select {
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+            }
+            .search-form .form-control:focus,
+            .search-form .form-select:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            }
+
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .data-table thead { background-color: #f8f9fa; }
+            .data-table th {
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                color: #212529;
+                border-bottom: 2px solid #dee2e6;
+                font-size: 0.9rem;
+            }
+            .data-table td {
+                padding: 12px;
+                border-bottom: 1px solid #e0e0e0;
+                color: #495057;
+                font-size: 0.95rem;
+            }
+            .data-table tbody tr:hover { background-color: #f8f9fa; }
         </style>
     </head>
     <body>
@@ -46,66 +91,65 @@
             <div class="content-card">
                 <div class="content-card-header">
                     <span><i class="bi bi-people"></i> Quản lý người dùng</span>
+                    <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-primary btn-sm">
+                        <i class="bi bi-speedometer2"></i> Về Dashboard
+                    </a>
                 </div>
                 
                 <div class="content-card-body">
             
-            <!-- Filter Bar (Horizontal) -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
+            <!-- Filter Bar (Unified with ManageStorage) -->
+            <div class="search-form mb-4">
                     <form method="get" action="${pageContext.request.contextPath}/admin/users" id="filterForm">
                         <!-- First Row: Keyword, Role, Status, Sort By -->
                         <div class="row g-3 mb-3">
                             <div class="col-md-3">
-                                <label class="form-label small">Từ khóa</label>
-                                <input type="text" class="form-control form-control-sm" name="keyword" value="${keyword}" placeholder="Tên, email, sđt...">
+                                <label class="form-label">Từ khóa</label>
+                                <input type="text" class="form-control" name="keyword" value="${keyword}" 
+                                       placeholder="Tên, email, sđt..." 
+                                       maxlength="50"
+                                       pattern="[a-zA-Z0-9@.\s]*" 
+                                       title="Chỉ được nhập chữ cái, số, @, . và khoảng trắng">
+                                <div class="invalid-feedback text-danger text-xs mt-1 hidden">Chỉ được nhập chữ cái, số, @, . và khoảng trắng (không quá 50 ký tự)</div>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Vai trò</label>
-                                <select class="form-select form-select-sm" name="role">
+                                <label class="form-label">Vai trò</label>
+                                <select class="form-select" name="role">
                                     <option value="ALL" ${role == 'ALL' ? 'selected' : ''}>Tất cả</option>
                                     <option value="ADMIN" ${role == 'ADMIN' ? 'selected' : ''}>ADMIN</option>
                                     <option value="CUSTOMER" ${role == 'CUSTOMER' ? 'selected' : ''}>CUSTOMER</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Trạng thái</label>
-                                <select class="form-select form-select-sm" name="status">
+                                <label class="form-label">Trạng thái</label>
+                                <select class="form-select" name="status">
                                     <option value="ALL" ${status == 'ALL' ? 'selected' : ''}>Tất cả</option>
                                     <option value="ACTIVE" ${status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
                                     <option value="BANNED" ${status == 'BANNED' ? 'selected' : ''}>BANNED</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Sắp xếp</label>
-                                <select class="form-select form-select-sm" name="sortBy">
+                                <label class="form-label">Sắp xếp</label>
+                                <select class="form-select" name="sortBy">
                                     <option value="created_at" ${sortBy == 'created_at' ? 'selected' : ''}>Ngày tạo</option>
                                     <option value="username" ${sortBy == 'username' ? 'selected' : ''}>Username</option>
                                     <option value="balance" ${sortBy == 'balance' ? 'selected' : ''}>Số dư</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Thứ tự</label>
-                                <select class="form-select form-select-sm" name="sortDir">
+                                <label class="form-label">Thứ tự</label>
+                                <select class="form-select" name="sortDir">
                                     <option value="DESC" ${sortDir == 'DESC' ? 'selected' : ''}>Giảm dần</option>
                                     <option value="ASC" ${sortDir == 'ASC' ? 'selected' : ''}>Tăng dần</option>
                                 </select>
                             </div>
-                            <div class="col-md-1 d-flex align-items-end">
-                                <div class="w-100">
-                                    <button class="btn btn-dark btn-sm w-100" type="submit">Tìm</button>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Second Row: Reset Button -->
-                        <div class="row">
-                            <div class="col-12">
-                                <a class="btn btn-outline-secondary btn-sm" href="${pageContext.request.contextPath}/admin/users">Reset</a>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+                                <a class="btn btn-secondary" href="${pageContext.request.contextPath}/admin/users">Reset</a>
                             </div>
                         </div>
                         <input type="hidden" name="page" value="1" id="pageInput">
                     </form>
-                </div>
             </div>
 
             <!-- Content -->
@@ -123,18 +167,18 @@
                         </c:when>
                         <c:otherwise>
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle">
+                                <table class="data-table">
                                     <thead class="table-light">
                                         <tr>
                                             <th>ID</th>
                                             <th>User</th>
                                             <th>Email</th>
+                                            <th>Số điện thoại</th>
                                             <th>Vai trò</th>
                                             <th>Trạng thái</th>
                                             <th>Số dư</th>
                                             <th>Ngày tạo</th>
-                                            <th class="text-center">Trạng thái</th>
-                                            <th></th>
+                                            <th class="text-center">Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -146,6 +190,7 @@
                                                     <div class="text-muted small">${u.fullName}</div>
                                                 </td>
                                                 <td>${u.email}</td>
+                                                <td>${u.phoneNumber}</td>
                                                 <td><span class="badge badge-role">${u.role}</span></td>
                                                 <td class="text-center">
                                                     <c:choose>
@@ -159,10 +204,10 @@
                                                 </td>
                                                 <td><fmt:formatNumber value="${u.balance}" type="number" maxFractionDigits="0" /> đ</td>
                                                 <td><fmt:formatDate value="${u.createdAt}" pattern="dd/MM/yyyy"/></td>
-                                                <td>
-                                                    <div class="d-flex gap-1">
-                                                        <a href="${pageContext.request.contextPath}/admin/user-detail?id=${u.userId}" class="btn btn-sm btn-outline-primary">Chi tiết</a>
-                                                        <a href="${pageContext.request.contextPath}/admin/user-edit?id=${u.userId}" class="btn btn-sm btn-outline-warning">
+                                                <td class="text-center">
+                                                    <div class="d-flex gap-1 justify-content-center">
+                                                        <a href="${pageContext.request.contextPath}/admin/user-detail?id=${u.userId}" class="btn btn-sm btn-primary">Chi tiết</a>
+                                                        <a href="${pageContext.request.contextPath}/admin/user-edit?id=${u.userId}" class="btn btn-sm btn-warning">
                                                             <i class="bi bi-pencil"></i> Sửa
                                                         </a>
                                                         <form method="post" action="${pageContext.request.contextPath}/admin/users" id="statusForm_${u.userId}">
@@ -171,13 +216,13 @@
                                                             <c:choose>
                                                                 <c:when test="${u.status == 'ACTIVE'}">
                                                                     <input type="hidden" name="status" value="BANNED">
-                                                                    <button type="button" onclick="confirmStatusChange('${u.userId}', 'BANNED', '${u.username}', 'khoá')" class="btn btn-sm btn-outline-danger">
+                                                                    <button type="button" onclick="confirmStatusChange('${u.userId}', 'BANNED', '${u.username}', 'khoá')" class="btn btn-sm btn-danger">
                                                                         <i class="bi bi-lock"></i> Khoá
                                                                     </button>
                                                                 </c:when>
                                                                 <c:otherwise>
                                                                     <input type="hidden" name="status" value="ACTIVE">
-                                                                    <button type="button" onclick="confirmStatusChange('${u.userId}', 'ACTIVE', '${u.username}', 'mở khoá')" class="btn btn-sm btn-outline-success">
+                                                                    <button type="button" onclick="confirmStatusChange('${u.userId}', 'ACTIVE', '${u.username}', 'mở khoá')" class="btn btn-sm btn-success">
                                                                         <i class="bi bi-unlock"></i> Mở
                                                                     </button>
                                                                 </c:otherwise>
@@ -221,6 +266,68 @@
 
         <c:set var="totalPagesValue" value="${totalPages != null ? totalPages : 1}" />
         <script>
+            // Form validation
+            (function() {
+                'use strict';
+                window.addEventListener('load', function() {
+                    var form = document.getElementById('filterForm');
+                    var keywordInput = document.querySelector('input[name="keyword"]');
+                    var invalidFeedback = keywordInput.nextElementSibling;
+                    
+                    form.addEventListener('submit', function(event) {
+                        var keywordValue = keywordInput.value.trim();
+                        var isValid = true;
+                        
+                        // Reset validation state
+                        keywordInput.classList.remove('border-danger');
+                        invalidFeedback.classList.add('hidden');
+                        
+                        // Validate keyword input - only allow letters, numbers, @, ., and spaces
+                        if (keywordValue) {
+                            // Check for invalid characters (anything except letters, numbers, @, ., and spaces)
+                            if (!/^[a-zA-Z0-9@.\s]*$/.test(keywordValue)) {
+                                keywordInput.classList.add('border-danger');
+                                invalidFeedback.classList.remove('hidden');
+                                isValid = false;
+                            }
+                            // Check if it's only spaces
+                            else if (keywordValue.length === 0) {
+                                keywordInput.value = ''; // Clear empty spaces
+                            }
+                            // Check minimum length (at least 1 actual character)
+                            else if (keywordValue.replace(/\s+/g, '').length === 0) {
+                                keywordInput.classList.add('border-danger');
+                                invalidFeedback.textContent = 'Vui lòng nhập ít nhất một ký tự (không chỉ khoảng trắng)';
+                                invalidFeedback.classList.remove('hidden');
+                                isValid = false;
+                            }
+                        }
+                        
+                        if (!isValid) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            keywordInput.focus();
+                        }
+                    }, false);
+                    
+                    // Real-time validation on input
+                    keywordInput.addEventListener('input', function() {
+                        var value = this.value;
+                        // Remove invalid characters as user types
+                        var cleaned = value.replace(/[^a-zA-Z0-9@.\s]/g, '');
+                        if (value !== cleaned) {
+                            this.value = cleaned;
+                        }
+                        
+                        // Reset error state when user fixes input
+                        if (this.classList.contains('border-danger')) {
+                            this.classList.remove('border-danger');
+                            invalidFeedback.classList.add('hidden');
+                        }
+                    });
+                }, false);
+            })();
+            
             function goToPage(page) {
                 var totalPages = ${totalPagesValue};
                 if (page < 1 || page > totalPages) return;

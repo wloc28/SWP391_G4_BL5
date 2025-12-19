@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 public class PaymentGatewayTransaction {
     private int pgId;
     private int transactionId;
-    private String gatewayName; // 'VNPAY' or 'MOMO'
+    private String gatewayName; // 'PayOS'
     private String paymentRefId;
     private String gatewayTransactionId;
     private BigDecimal amount;

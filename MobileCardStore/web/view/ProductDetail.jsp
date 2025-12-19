@@ -8,6 +8,17 @@
         <title>Chi Tiết Sản Phẩm</title>
         <%@include file="../components/libs.jsp" %>
         <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .aspect-square {
+                aspect-ratio: 1 / 1;
+            }
+        </style>
     </head>
     <body>
         <%@include file="../components/header_v2.jsp" %>
@@ -48,33 +59,45 @@
                         
                         <!-- Product Information -->
                         <div>
-                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
-                                <h1 class="text-2xl font-bold text-gray-900 mb-3">${product.productName}</h1>
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+                                <h1 class="text-xl font-bold text-gray-900 mb-2">${product.productName}</h1>
                                 
                                 <!-- Provider Info -->
-                                <div class="flex gap-2 mb-3">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${product.provider.providerName}</span>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${product.provider.providerType}</span>
+                                <div class="flex gap-2 mb-2">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${product.provider.providerName}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <c:choose>
+                                            <c:when test="${product.provider.providerType == 'TEL'}">Thẻ điện thoại</c:when>
+                                            <c:when test="${product.provider.providerType == 'GAME'}">Thẻ game</c:when>
+                                            <c:otherwise>${product.provider.providerType}</c:otherwise>
+                                        </c:choose>
+                                    </span>
                                 </div>
                                 
                                 <!-- Price -->
-                                <div class="mb-4 pb-4 border-b border-gray-200">
-                                    <p class="text-xs text-gray-600 mb-0.5">Giá bán</p>
-                                    <p class="text-3xl font-bold text-gray-900">
+                                <div class="mb-3 pb-3 border-b border-gray-200">
+                                    <p class="text-xs text-gray-600 mb-1">Giá bán</p>
+                                    <p class="text-2xl font-bold text-red-600">
                                         <fmt:formatNumber value="${product.price}" type="number" maxFractionDigits="0" /> đ
                                     </p>
                                 </div>
                                 
                                 <!-- Stock Status -->
-                                <div class="mb-4">
+                                <div class="mb-3">
                                     <c:choose>
                                         <c:when test="${stock > 0}">
-                                            <span class="inline-flex items-center px-3 py-1.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                </svg>
                                                 Còn hàng: ${stock} sản phẩm
                                             </span>
                                         </c:when>
                                         <c:otherwise>
-                                            <span class="inline-flex items-center px-3 py-1.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                                </svg>
                                                 Hết hàng
                                             </span>
                                         </c:otherwise>
@@ -83,48 +106,34 @@
                                 
                                 <!-- Description -->
                                 <c:if test="${not empty product.description}">
-                                    <div class="mb-4">
-                                        <h3 class="text-sm font-semibold text-gray-900 mb-1.5">Mô tả sản phẩm</h3>
+                                    <div class="mb-3">
+                                        <h3 class="text-sm font-semibold text-gray-900 mb-1">Mô tả</h3>
                                         <p class="text-sm text-gray-600 leading-relaxed">${product.description}</p>
                                     </div>
                                 </c:if>
                                 
-                                <!-- Product Details -->
+                                <!-- Product Details - More compact -->
                                 <div class="mb-4">
                                     <h3 class="text-sm font-semibold text-gray-900 mb-2">Thông tin sản phẩm</h3>
-                                    <dl class="grid grid-cols-2 gap-2">
-                                        <div class="bg-gray-50 px-3 py-2 rounded">
-                                            <dt class="text-xs font-medium text-gray-500">Mã SP</dt>
-                                            <dd class="mt-0.5 text-xs text-gray-900">#${product.productId}</dd>
-                                        </div>
-                                        <div class="bg-gray-50 px-3 py-2 rounded">
-                                            <dt class="text-xs font-medium text-gray-500">Nhà cung cấp</dt>
-                                            <dd class="mt-0.5 text-xs text-gray-900">${product.provider.providerName}</dd>
-                                        </div>
-                                        <div class="bg-gray-50 px-3 py-2 rounded">
-                                            <dt class="text-xs font-medium text-gray-500">Loại</dt>
-                                            <dd class="mt-0.5 text-xs text-gray-900">
-                                                <c:choose>
-                                                    <c:when test="${product.provider.providerType == 'TEL'}">Thẻ điện thoại</c:when>
-                                                    <c:when test="${product.provider.providerType == 'GAME'}">Thẻ game</c:when>
-                                                    <c:otherwise>${product.provider.providerType}</c:otherwise>
-                                                </c:choose>
-                                            </dd>
-                                        </div>
-                                        <div class="bg-gray-50 px-3 py-2 rounded">
-                                            <dt class="text-xs font-medium text-gray-500">Trạng thái</dt>
-                                            <dd class="mt-0.5">
+                                    <div class="bg-gray-50 p-3 rounded-lg">
+                                        <div class="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                                <span class="font-medium text-gray-500">Mã SP:</span>
+                                                <span class="text-gray-900">#${product.productId}</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-medium text-gray-500">Trạng thái:</span>
                                                 <c:choose>
                                                     <c:when test="${product.status == 'ACTIVE'}">
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Đang bán</span>
+                                                        <span class="text-green-600">Đang bán</span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Ngừng bán</span>
+                                                        <span class="text-gray-500">Ngừng bán</span>
                                                     </c:otherwise>
                                                 </c:choose>
-                                            </dd>
+                                            </div>
                                         </div>
-                                    </dl>
+                                    </div>
                                 </div>
                                 
                                 <!-- Action Buttons -->
@@ -156,6 +165,51 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Related Products Section -->
+                    <c:if test="${not empty relatedProducts}">
+                        <div class="mt-6">
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-3">
+                                <h2 class="text-base font-semibold text-gray-900 mb-3">Sản phẩm liên quan</h2>
+                                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                    <c:forEach var="relatedProduct" items="${relatedProducts}">
+                                        <div class="bg-gray-50 border border-gray-200 rounded-md overflow-hidden hover:shadow-sm transition-shadow duration-200 cursor-pointer" 
+                                             onclick="window.location.href='${pageContext.request.contextPath}/product-detail?id=${relatedProduct.productId}'">
+                                            <!-- Product Image -->
+                                            <div class="aspect-square bg-white">
+                                                <c:choose>
+                                                    <c:when test="${not empty relatedProduct.imageUrl}">
+                                                        <img src="${relatedProduct.imageUrl}" 
+                                                             class="w-full h-full object-cover" 
+                                                             alt="${relatedProduct.productName}"
+                                                             onerror="this.src='https://via.placeholder.com/150x150?text=No+Image'">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <img src="https://via.placeholder.com/150x150?text=No+Image" 
+                                                             class="w-full h-full object-cover" 
+                                                             alt="${relatedProduct.productName}">
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                            
+                                            <!-- Product Info -->
+                                            <div class="p-2">
+                                                <h3 class="text-xs font-medium text-gray-900 mb-0.5 line-clamp-2">${relatedProduct.productName}</h3>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-xs font-bold text-red-600">
+                                                        <fmt:formatNumber value="${relatedProduct.price}" type="number" maxFractionDigits="0" />đ
+                                                    </span>
+                                                    <span class="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                                                        ${relatedProduct.provider.providerName}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                            </div>
+                        </div>
+                    </c:if>
                 </c:if>
             </div>
         </div>
