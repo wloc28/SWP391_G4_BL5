@@ -688,7 +688,18 @@
                         
                         <!-- Action Buttons Row -->
                         <div class="row g-3">
-                            <div class="col-md-12 d-flex justify-content-end gap-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Số lượng mỗi trang</label>
+                                <select class="form-select" name="pageSize" id="pageSizeSelect">
+                                    <c:set var="currentPageSize" value="${pageSize != null ? pageSize : 15}" />
+                                    <option value="10" ${currentPageSize == 10 ? 'selected' : ''}>10</option>
+                                    <option value="15" ${currentPageSize == 15 ? 'selected' : ''}>15</option>
+                                    <option value="20" ${currentPageSize == 20 ? 'selected' : ''}>20</option>
+                                    <option value="50" ${currentPageSize == 50 ? 'selected' : ''}>50</option>
+                                    <option value="100" ${currentPageSize == 100 ? 'selected' : ''}>100</option>
+                                </select>
+                            </div>
+                            <div class="col-md-9 d-flex justify-content-end gap-2 align-items-end">
                                 <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-search"></i> Tìm kiếm
                                 </button>
@@ -785,61 +796,6 @@
                                                            class="btn-action btn-view" title="Xem chi tiết">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        
-                                                        <!-- Quick Status Update - Only show valid transitions -->
-                                                        <c:if test="${order.status ne 'COMPLETED' and order.status ne 'FAILED'}">
-                                                            <div class="dropdown">
-                                                                <button class="btn-action btn-edit dropdown-toggle" type="button" 
-                                                                        data-bs-toggle="dropdown" title="Cập nhật trạng thái">
-                                                                    <i class="bi bi-gear"></i>
-                                                                </button>
-                                                                <ul class="dropdown-menu">
-                                                                    <!-- PENDING can only go to PROCESSING -->
-                                                                    <c:if test="${order.status eq 'PENDING'}">
-                                                                        <li>
-                                                                            <form method="POST" action="${pageContext.request.contextPath}/admin/orders" style="display: inline;">
-                                                                                <input type="hidden" name="action" value="updateStatus">
-                                                                                <input type="hidden" name="orderId" value="${order.orderId}">
-                                                                                <input type="hidden" name="status" value="PROCESSING">
-                                                                                <button type="submit" class="dropdown-item">
-                                                                                    <i class="bi bi-play-circle"></i> Bắt đầu xử lý
-                                                                                </button>
-                                                                            </form>
-                                                                        </li>
-                                                                    </c:if>
-                                                                    
-                                                                    <!-- PROCESSING can go to COMPLETED or FAILED -->
-                                                                    <c:if test="${order.status eq 'PROCESSING'}">
-                                                                        <li>
-                                                                            <form method="POST" action="${pageContext.request.contextPath}/admin/orders" style="display: inline;">
-                                                                                <input type="hidden" name="action" value="updateStatus">
-                                                                                <input type="hidden" name="orderId" value="${order.orderId}">
-                                                                                <input type="hidden" name="status" value="COMPLETED">
-                                                                                <button type="submit" class="dropdown-item">
-                                                                                    <i class="bi bi-check-circle"></i> Hoàn thành
-                                                                                </button>
-                                                                            </form>
-                                                                        </li>
-                                                                        <li>
-                                                                            <form method="POST" action="${pageContext.request.contextPath}/admin/orders" style="display: inline;">
-                                                                                <input type="hidden" name="action" value="updateStatus">
-                                                                                <input type="hidden" name="orderId" value="${order.orderId}">
-                                                                                <input type="hidden" name="status" value="FAILED">
-                                                                                <button type="submit" class="dropdown-item text-danger" 
-                                                                                        onclick="return confirm('Bạn có chắc chắn muốn đánh dấu đơn hàng này là thất bại?')">
-                                                                                    <i class="bi bi-x-circle"></i> Đánh dấu thất bại
-                                                                                </button>
-                                                                            </form>
-                                                                        </li>
-                                                                    </c:if>
-                                                                </ul>
-                                                            </div>
-                                                        </c:if>
-                                                        <c:if test="${order.status eq 'COMPLETED' or order.status eq 'FAILED'}">
-                                                            <span class="text-muted small" title="Đơn hàng đã kết thúc, không thể thay đổi trạng thái">
-                                                                <i class="bi bi-lock"></i>
-                                                            </span>
-                                                        </c:if>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -925,6 +881,21 @@
                     return;
                 }
                 
+                // Validate không cho nhập số âm
+                if (min && parseFloat(min) < 0) {
+                    alert('Giá tối thiểu không được nhỏ hơn 0');
+                    document.getElementById('minPriceInput').value = '';
+                    document.getElementById('minPriceInput').focus();
+                    return;
+                }
+                
+                if (max && parseFloat(max) < 0) {
+                    alert('Giá tối đa không được nhỏ hơn 0');
+                    document.getElementById('maxPriceInput').value = '';
+                    document.getElementById('maxPriceInput').focus();
+                    return;
+                }
+                
                 if (min && max && parseFloat(min) > parseFloat(max)) {
                     alert('Giá tối thiểu không được lớn hơn giá tối đa');
                     return;
@@ -936,7 +907,7 @@
                 document.getElementById('filterForm').submit();
             }
             
-            // Initialize manual price inputs with current values
+            // Initialize manual price inputs with current values and add validation
             document.addEventListener('DOMContentLoaded', function() {
                 var minPriceHidden = document.getElementById('minPrice');
                 var maxPriceHidden = document.getElementById('maxPrice');
@@ -948,6 +919,41 @@
                 }
                 if (maxPriceHidden && maxPriceInput && maxPriceHidden.value) {
                     maxPriceInput.value = maxPriceHidden.value;
+                }
+                
+                // Prevent negative numbers in price inputs
+                if (minPriceInput) {
+                    minPriceInput.addEventListener('input', function() {
+                        var value = parseFloat(this.value);
+                        if (value < 0) {
+                            this.value = '';
+                            alert('Giá không được nhỏ hơn 0');
+                        }
+                    });
+                    
+                    minPriceInput.addEventListener('keydown', function(e) {
+                        // Prevent minus sign
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                            e.preventDefault();
+                        }
+                    });
+                }
+                
+                if (maxPriceInput) {
+                    maxPriceInput.addEventListener('input', function() {
+                        var value = parseFloat(this.value);
+                        if (value < 0) {
+                            this.value = '';
+                            alert('Giá không được nhỏ hơn 0');
+                        }
+                    });
+                    
+                    maxPriceInput.addEventListener('keydown', function(e) {
+                        // Prevent minus sign
+                        if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                            e.preventDefault();
+                        }
+                    });
                 }
             });
             
@@ -963,35 +969,13 @@
                     });
                 });
                 
-                // Search input validation - automatically remove _ and % characters
-                var searchInput = document.getElementById('searchInput');
-                
-                if (searchInput) {
-                    // Real-time validation on input - silently remove invalid characters
-                    searchInput.addEventListener('input', function() {
-                        var value = this.value;
-                        // Remove invalid characters (_ and %) as user types
-                        var cleaned = value.replace(/[_\u0025]/g, '');
-                        if (value !== cleaned) {
-                            this.value = cleaned;
-                        }
+                // Handle page size change - auto submit when changed
+                var pageSizeSelect = document.getElementById('pageSizeSelect');
+                if (pageSizeSelect) {
+                    pageSizeSelect.addEventListener('change', function() {
+                        document.getElementById('pageInput').value = 1; // Reset to page 1
+                        document.getElementById('filterForm').submit();
                     });
-                    
-                    // Validate on form submit
-                    document.getElementById('filterForm').addEventListener('submit', function(event) {
-                        var value = searchInput.value.trim();
-                        
-                        // Remove any invalid characters before submit
-                        var cleaned = value.replace(/[_\u0025]/g, '');
-                        if (value !== cleaned) {
-                            searchInput.value = cleaned;
-                        }
-                        
-                        // Check if it's only spaces
-                        if (searchInput.value.length > 0 && searchInput.value.replace(/\s+/g, '').length === 0) {
-                            searchInput.value = '';
-                        }
-                    }, false);
                 }
             });
         </script>

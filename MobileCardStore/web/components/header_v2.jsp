@@ -18,8 +18,8 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center">
 
     <ul class="nav mb-2 justify-content-center mb-md-0">
-    <li><a href="home" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
-    <li><a href="products" class="nav-link px-2 text-secondary">Sản phẩm</a></li>
+    <li><a href="${pageContext.request.contextPath}/home" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
+    <li><a href="${pageContext.request.contextPath}/products" class="nav-link px-2 text-secondary">Sản phẩm</a></li>
     </ul>
 
     <!-- Not logged in:  Show Login/Register buttons -->
@@ -107,7 +107,7 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
-                        <li><a class="dropdown-item" href="wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -126,7 +126,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center">
 
         <ul class="nav mb-2 justify-content-center mb-md-0">
-        <li><a href="admin/dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
+        <li><a href="${pageContext.request.contextPath}/admin/dashboard" class="nav-link px-2 text-white fw-bold">Mobile Card Store</a></li>
         </ul>
 
         <c:if test="${sessionScope.info != null or sessionScope.user != null}">
