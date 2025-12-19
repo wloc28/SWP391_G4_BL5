@@ -5,6 +5,7 @@ import Models.Order;
 import Models.User;
 import Models.Product;
 import Models.Voucher;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -460,6 +461,53 @@ public class OrderDAO {
         }
         
         return providers;
+    }
+    
+    /**
+     * Tạo đơn hàng mới từ thông tin sản phẩm
+     */
+    public int createOrder(int userId, int productId, String providerName, String productName,
+                           BigDecimal unitPrice, int quantity, Integer voucherId, String voucherCode,
+                           BigDecimal discountAmount, BigDecimal totalAmount, int createdBy) throws SQLException {
+        String sql = "INSERT INTO orders (user_id, product_id, provider_name, product_name, " +
+                     "unit_price, quantity, voucher_id, voucher_code, discount_amount, total_amount, " +
+                     "status, created_at, updated_at, is_deleted, created_by) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', NOW(), NOW(), 0, ?)";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            
+            ps.setInt(1, userId);
+            ps.setInt(2, productId);
+            ps.setString(3, providerName);
+            ps.setString(4, productName);
+            ps.setBigDecimal(5, unitPrice);
+            ps.setInt(6, quantity);
+            
+            if (voucherId != null) {
+                ps.setInt(7, voucherId);
+                ps.setString(8, voucherCode);
+            } else {
+                ps.setNull(7, java.sql.Types.INTEGER);
+                ps.setNull(8, java.sql.Types.VARCHAR);
+            }
+            
+            ps.setBigDecimal(9, discountAmount != null ? discountAmount : BigDecimal.ZERO);
+            ps.setBigDecimal(10, totalAmount);
+            ps.setInt(11, createdBy);
+            
+            int affectedRows = ps.executeUpdate();
+            
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    }
+                }
+            }
+        }
+        
+        return -1;
     }
     
     /**
