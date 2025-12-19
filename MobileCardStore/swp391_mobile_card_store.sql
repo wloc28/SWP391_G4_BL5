@@ -181,7 +181,7 @@ DROP TABLE IF EXISTS `payment_gateway_transactions`;
 CREATE TABLE `payment_gateway_transactions` (
   `pg_id` int NOT NULL AUTO_INCREMENT,
   `transaction_id` int NOT NULL,
-  `gateway_name` enum('VNPAY','MOMO') NOT NULL,
+  `gateway_name` enum('VNPAY','MOMO','PAYOS') NOT NULL,
   `payment_ref_id` varchar(100) DEFAULT NULL,
   `gateway_transaction_id` varchar(100) DEFAULT NULL,
   `amount` decimal(15,2) DEFAULT NULL,

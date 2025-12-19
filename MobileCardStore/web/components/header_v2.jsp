@@ -54,13 +54,23 @@
 
         <!-- Logged-in Customer: Show wallet + dropdown -->
         <c:if test="${sessionScope.info != null or sessionScope.user != null}">
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center">  
                 <!-- Wallet Balance -->
                 <span class="text-warning me-3">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wallet2 me-1" viewBox="0 0 16 16">
                             <path d="M12. 136. 326A1.5 1.5 0 0 1 14 1.78V3h. 5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499L12.136.326zM5.562 3H13V1.78a. 5.5 0 0 0-. 621-. 484L5.562 3zM1.5 4a. 5.5 0 0 0-. 5.5v9a. 5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"/>
                         </svg>
-                        Số dư: <strong><fmt:formatNumber value="${sessionScope.info.balance}" type="number" maxFractionDigits="0"/> đ</strong>
+                        Số dư: <strong>
+                            <c:choose>
+                                <c:when test="${sessionScope.info != null and sessionScope.info.balance != null}">
+                                    <fmt:formatNumber value="${sessionScope.info.balance}" type="number" maxFractionDigits="0"/> đ
+                                </c:when>
+                                <c:when test="${sessionScope.user != null and sessionScope.user.balance != null}">
+                                    <fmt:formatNumber value="${sessionScope.user.balance}" type="number" maxFractionDigits="0"/> đ
+                                </c:when>
+                                <c:otherwise>0 đ</c:otherwise>
+                            </c:choose>
+                        </strong>
                     </span>
 
                 <!-- User Dropdown -->
