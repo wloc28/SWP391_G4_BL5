@@ -5,7 +5,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Lịch sử đơn hàng - Mobile Card Store</title>
+        <title>Lịch sử đơn hàng<c:if test="${not empty user}"> - ${user.fullName != null ? user.fullName : user.username}</c:if> - Mobile Card Store</title>
         <%@include file="../components/libs.jsp" %>
         <style>
             * {
@@ -30,11 +30,48 @@
                 color: white;
             }
             
-            .page-title {
-                font-size: 2rem;
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 25px;
+                margin-bottom: 30px;
+            }
+            
+            .user-avatar {
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
                 font-weight: 700;
-                margin-bottom: 20px;
+                font-size: 2.5rem;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+            
+            .user-details h2 {
+                margin: 0 0 10px 0;
+                color: white;
+                font-weight: 700;
+                font-size: 2rem;
                 text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            .user-details p {
+                margin: 8px 0;
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .user-details i {
+                font-size: 1.1rem;
             }
             
             /* Statistics Cards */
@@ -91,6 +128,9 @@
                 padding: 25px 30px;
                 background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
                 border-bottom: 2px solid #dee2e6;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
             
             .orders-card-header h5 {
@@ -254,6 +294,19 @@
                 box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
             }
             
+            .btn-secondary {
+                background: linear-gradient(135deg, #6c757d 0%, #5c636a 100%);
+                color: white;
+            }
+            
+            .btn-secondary:hover {
+                background: linear-gradient(135deg, #5c636a 0%, #565e64 100%);
+                color: white;
+                text-decoration: none;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+            }
+            
             /* Empty State */
             .empty-state {
                 text-align: center;
@@ -315,7 +368,19 @@
                     padding: 25px 20px;
                 }
                 
-                .page-title {
+                .user-info {
+                    flex-direction: column;
+                    text-align: center;
+                    gap: 15px;
+                }
+                
+                .user-avatar {
+                    width: 80px;
+                    height: 80px;
+                    font-size: 2rem;
+                }
+                
+                .user-details h2 {
                     font-size: 1.5rem;
                 }
                 
@@ -330,6 +395,12 @@
                 
                 .stat-value {
                     font-size: 1.5rem;
+                }
+                
+                .orders-card-header {
+                    flex-direction: column;
+                    gap: 15px;
+                    align-items: flex-start;
                 }
                 
                 .data-table {
@@ -354,61 +425,79 @@
                 .stats-row {
                     grid-template-columns: 1fr;
                 }
+                
+                .orders-card-header h5 {
+                    font-size: 1.1rem;
+                }
             }
         </style>
     </head>
     <body>
         <%@include file="../components/header_v2.jsp" %>
         <div class="container-fluid py-4">
-            <!-- Page Header -->
-            <div class="page-header">
-                <h1 class="page-title">
-                    <i class="bi bi-clock-history"></i> Lịch sử đơn hàng
-                </h1>
-                
-                <!-- Order Statistics -->
-                <c:if test="${not empty orders}">
-                    <c:set var="totalOrders" value="${orders.size()}" />
-                    <c:set var="completedCount" value="0" />
-                    <c:set var="processingCount" value="0" />
-                    <c:set var="totalSpent" value="0" />
-                    <c:forEach var="order" items="${orders}">
-                        <c:if test="${order.status eq 'COMPLETED'}">
-                            <c:set var="completedCount" value="${completedCount + 1}" />
-                        </c:if>
-                        <c:if test="${order.status eq 'PROCESSING'}">
-                            <c:set var="processingCount" value="${processingCount + 1}" />
-                        </c:if>
-                        <c:set var="totalSpent" value="${totalSpent + order.totalAmount.doubleValue()}" />
-                    </c:forEach>
-                    
-                    <div class="stats-row">
-                        <div class="stat-item">
-                            <div class="stat-value">${totalOrders}</div>
-                            <div class="stat-label">Tổng đơn hàng</div>
+            <!-- User Information Header -->
+            <c:if test="${not empty user}">
+                <div class="page-header">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            ${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : user.username.substring(0,1).toUpperCase()}
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${completedCount}</div>
-                            <div class="stat-label">Hoàn thành</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${processingCount}</div>
-                            <div class="stat-label">Đang xử lý</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">
-                                <fmt:formatNumber value="${totalSpent}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
-                            </div>
-                            <div class="stat-label">Tổng chi tiêu</div>
+                        <div class="user-details">
+                            <h2>${user.fullName != null ? user.fullName : user.username}</h2>
+                            <p><i class="bi bi-envelope"></i> ${user.email}</p>
+                            <c:if test="${not empty user.phoneNumber}">
+                                <p><i class="bi bi-telephone"></i> ${user.phoneNumber}</p>
+                            </c:if>
                         </div>
                     </div>
-                </c:if>
-            </div>
+                    
+                    <!-- Order Statistics -->
+                    <c:if test="${not empty orders}">
+                        <c:set var="totalOrders" value="${orders.size()}" />
+                        <c:set var="completedCount" value="0" />
+                        <c:set var="processingCount" value="0" />
+                        <c:set var="totalSpent" value="0" />
+                        <c:forEach var="order" items="${orders}">
+                            <c:if test="${order.status eq 'COMPLETED'}">
+                                <c:set var="completedCount" value="${completedCount + 1}" />
+                            </c:if>
+                            <c:if test="${order.status eq 'PROCESSING'}">
+                                <c:set var="processingCount" value="${processingCount + 1}" />
+                            </c:if>
+                            <c:set var="totalSpent" value="${totalSpent + order.totalAmount.doubleValue()}" />
+                        </c:forEach>
+                        
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-value">${totalOrders}</div>
+                                <div class="stat-label">Tổng đơn hàng</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${completedCount}</div>
+                                <div class="stat-label">Hoàn thành</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${processingCount}</div>
+                                <div class="stat-label">Đang xử lý</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">
+                                    <fmt:formatNumber value="${totalSpent}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
+                                </div>
+                                <div class="stat-label">Tổng chi tiêu</div>
+                            </div>
+                        </div>
+                    </c:if>
+                </div>
+            </c:if>
             
             <!-- Orders List -->
             <div class="orders-card">
                 <div class="orders-card-header">
-                    <h5><i class="bi bi-clock-history"></i> Danh sách đơn hàng</h5>
+                    <h5><i class="bi bi-clock-history"></i> Lịch sử đơn hàng</h5>
+                    <a href="${pageContext.request.contextPath}/admin/orders" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                    </a>
                 </div>
                 
                 <c:choose>
@@ -416,10 +505,8 @@
                         <div class="empty-state">
                             <i class="bi bi-inbox"></i>
                             <h4>Chưa có đơn hàng nào</h4>
-                            <p>Bạn chưa thực hiện đơn hàng nào.</p>
-                            <a href="${pageContext.request.contextPath}/products" class="btn btn-primary">
-                                <i class="bi bi-cart"></i> Mua sắm ngay
-                            </a>
+                            <p>Người dùng này chưa thực hiện đơn hàng nào.</p>
+                           
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -485,7 +572,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <a href="${pageContext.request.contextPath}/order-detail/${order.orderId}" 
+                                            <a href="${pageContext.request.contextPath}/admin/orders/detail/${order.orderId}" 
                                                class="btn btn-primary" title="Xem chi tiết">
                                                 <i class="bi bi-eye"></i> Chi tiết
                                             </a>
@@ -502,4 +589,3 @@
         <%@include file="../components/footer.jsp" %>
     </body>
 </html>
-
