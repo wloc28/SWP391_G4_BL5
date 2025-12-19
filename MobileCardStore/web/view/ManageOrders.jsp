@@ -553,10 +553,6 @@
                             <div class="stat-card-value">${totalOrders}</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-title">Chờ xử lý</div>
-                            <div class="stat-card-value">${orderStats['PENDING'] != null ? orderStats['PENDING'] : 0}</div>
-                        </div>
-                        <div class="stat-card">
                             <div class="stat-card-title">Đang xử lý</div>
                             <div class="stat-card-value">${orderStats['PROCESSING'] != null ? orderStats['PROCESSING'] : 0}</div>
                         </div>
@@ -677,10 +673,6 @@
                                                placeholder="Đến" 
                                                min="0" 
                                                step="1000">
-                                        <button type="button" onclick="applyManualPriceRange()" 
-                                                class="btn btn-sm btn-outline-primary">
-                                            Áp dụng
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -921,7 +913,7 @@
                     maxPriceInput.value = maxPriceHidden.value;
                 }
                 
-                // Prevent negative numbers in price inputs
+                // Prevent negative numbers in price inputs and auto-apply on Enter
                 if (minPriceInput) {
                     minPriceInput.addEventListener('input', function() {
                         var value = parseFloat(this.value);
@@ -935,6 +927,11 @@
                         // Prevent minus sign
                         if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
                             e.preventDefault();
+                        }
+                        // Auto-apply on Enter
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            applyManualPriceRange();
                         }
                     });
                 }
@@ -952,6 +949,11 @@
                         // Prevent minus sign
                         if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
                             e.preventDefault();
+                        }
+                        // Auto-apply on Enter
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            applyManualPriceRange();
                         }
                     });
                 }
