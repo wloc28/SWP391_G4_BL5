@@ -262,7 +262,9 @@
                                 <c:if test="${!hasFeedbacked}">
                                     <div class="mb-6">
                                         <form action="${pageContext.request.contextPath}/feedback/add" method="POST">
-                                            <input type="hidden" name="productId" value="${product.productId}">
+                                            <input type="hidden" name="productId" value="${product.providerStorageId}">
+                                            <input type="hidden" name="code" value="${product.productCode}">
+                                            <input type="hidden" name="providerId" value="${product.providerId}">
                                             <div class="mb-3">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Đánh giá:</label>
                                                 <input type="hidden" name="rating" id="ratingValue" value="">
@@ -313,7 +315,9 @@
                                         <c:if test="${not empty currentUserFeedback}">
                                             <form action="${pageContext.request.contextPath}/feedback/update-rating" method="POST" class="flex items-center gap-2">
                                                 <input type="hidden" name="feedbackId" value="${currentUserFeedback.feedbackId}">
-                                                <input type="hidden" name="productId" value="${product.productId}">
+                                                <input type="hidden" name="productId" value="${product.providerStorageId}">
+                                                <input type="hidden" name="code" value="${product.productCode}">
+                                                <input type="hidden" name="providerId" value="${product.providerId}">
                                                 <input type="hidden" name="rating" id="editRatingValue" value="${currentUserFeedback.rating}">
                                                 <label class="text-sm text-gray-700">Sửa đánh giá:</label>
                                                 <div class="flex items-center gap-1" id="editStarRating" onmouseleave="resetEditStarHover()">
@@ -371,11 +375,6 @@
                                                     <c:if test="${not empty feedback.rating}">
                                                         <span class="text-sm text-yellow-600 font-medium">
                                                             ${feedback.rating}/5 ⭐
-                                                        </span>
-                                                    </c:if>
-                                                    <c:if test="${hasPurchasedMap[feedback.userId]}">
-                                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
-                                                            Đã mua sản phẩm
                                                         </span>
                                                     </c:if>
                                                 </div>

@@ -14,7 +14,9 @@ public class Feedback {
     private Integer rating; // 1-5
     private String adminReply;
     private Timestamp adminReplyAt;
+    private String status; // 'PENDING', 'RESOLVED', 'HIDDEN'
     private boolean isVisible;
+    private boolean isDeleted;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     
@@ -103,6 +105,22 @@ public class Feedback {
     
     public void setVisible(boolean visible) {
         isVisible = visible;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+    
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
     
     public Timestamp getCreatedAt() {

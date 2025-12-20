@@ -24,11 +24,11 @@ public class FeedbackDAO {
         
         // Build SQL với WHERE và ORDER BY động
         StringBuilder sql = new StringBuilder(
-            "SELECT f.*, u.full_name, u.email, p.product_name " +
+            "SELECT f.*, u.full_name, u.email, ps.product_name " +
             "FROM feedbacks f " +
             "INNER JOIN users u ON f.user_id = u.user_id " +
-            "INNER JOIN products p ON f.product_id = p.product_id " +
-            "WHERE 1=1 "
+            "INNER JOIN provider_storage ps ON f.provider_storage_id = ps.provider_storage_id " +
+            "WHERE f.is_deleted = 0 "
         );
         
         List<Object> params = new ArrayList<>();
@@ -44,7 +44,7 @@ public class FeedbackDAO {
         
         // Filter theo productId
         if (productId != null && productId > 0) {
-            sql.append("AND f.product_id = ? ");
+            sql.append("AND f.provider_storage_id = ? ");
             params.add(productId);
         }
         
@@ -132,8 +132,8 @@ public class FeedbackDAO {
             "SELECT COUNT(*) as total " +
             "FROM feedbacks f " +
             "INNER JOIN users u ON f.user_id = u.user_id " +
-            "INNER JOIN products p ON f.product_id = p.product_id " +
-            "WHERE 1=1 "
+            "INNER JOIN provider_storage ps ON f.provider_storage_id = ps.provider_storage_id " +
+            "WHERE f.is_deleted = 0 "
         );
         
         List<Object> params = new ArrayList<>();
@@ -149,7 +149,7 @@ public class FeedbackDAO {
         
         // Filter theo productId
         if (productId != null && productId > 0) {
-            sql.append("AND f.product_id = ? ");
+            sql.append("AND f.provider_storage_id = ? ");
             params.add(productId);
         }
         
@@ -233,7 +233,7 @@ public class FeedbackDAO {
     }
     
     public boolean deleteFeedback(int feedbackId) throws SQLException {
-        String sql = "DELETE FROM feedbacks WHERE feedback_id = ?";
+        String sql = "UPDATE feedbacks SET is_deleted = 1, updated_at = NOW() WHERE feedback_id = ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -247,10 +247,12 @@ public class FeedbackDAO {
         Feedback feedback = new Feedback();
         feedback.setFeedbackId(rs.getInt("feedback_id"));
         feedback.setUserId(rs.getInt("user_id"));
-        feedback.setProductId(rs.getInt("product_id"));
+        feedback.setProductId(rs.getInt("provider_storage_id"));
         feedback.setContent(rs.getString("content"));
         feedback.setRating(rs.getObject("rating") != null ? rs.getInt("rating") : null);
+        feedback.setStatus(rs.getString("status"));
         feedback.setVisible(rs.getBoolean("is_visible"));
+        feedback.setDeleted(rs.getBoolean("is_deleted"));
         feedback.setCreatedAt(rs.getTimestamp("created_at"));
         feedback.setUpdatedAt(rs.getTimestamp("updated_at"));
         feedback.setAdminReply(rs.getString("admin_reply"));

@@ -126,7 +126,7 @@ public class ManageFeedbackController extends HttpServlet {
             request.getRequestDispatcher("/view/ManageFeedback.jsp").forward(request, response);
         } catch (SQLException e) {
             e.printStackTrace();
-            request.setAttribute("error", "Lỗi khi tải danh sách feedback");
+           
             request.getRequestDispatcher("/view/ManageFeedback.jsp").forward(request, response);
         }
     }

@@ -1,6 +1,7 @@
 package controller.user;
 
 import DAO.user.ProductDAO;
+import DAO.user.FeedbackDAO;
 import Models.ProductDisplay;
 import Models.Provider;
 import Models.Feedback;
@@ -9,8 +10,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -219,39 +218,27 @@ public class ProductServlet extends HttpServlet {
             // Get related products (same provider, max 8 products)
             List<ProductDisplay> relatedProducts = productDAO.getRelatedProducts(productCode, providerId, product.getProviderId(), 8);
             request.setAttribute("relatedProducts", relatedProducts);
+            
             // Load feedbacks for this product
             FeedbackDAO feedbackDAO = new FeedbackDAO();
-            List<Feedback> feedbacks = feedbackDAO.getFeedbacksByProductId(productId);
+            int providerStorageId = product.getProviderStorageId(); // Lấy provider_storage_id từ product
+            List<Feedback> feedbacks = feedbackDAO.getFeedbacksByProductId(providerStorageId);
             
-            // Check if current user has purchased this product (for each feedback user)
-            Map<Integer, Boolean> hasPurchasedMap = new HashMap<>();
+            // Check if current user has already feedbacked
             User currentUser = (User) request.getSession().getAttribute("user");
             Feedback currentUserFeedback = null;
             if (currentUser != null) {
-                // Check if current user has purchased
-                boolean hasPurchased = feedbackDAO.hasUserPurchasedProduct(currentUser.getUserId(), productId);
-                request.setAttribute("hasPurchased", hasPurchased);
-                
                 // Check if current user has already feedbacked
-                boolean hasFeedbacked = feedbackDAO.hasUserFeedbackedProduct(currentUser.getUserId(), productId);
+                boolean hasFeedbacked = feedbackDAO.hasUserFeedbackedProduct(currentUser.getUserId(), providerStorageId);
                 request.setAttribute("hasFeedbacked", hasFeedbacked);
                 
                 // Get current user's feedback (để có thể sửa rating)
                 if (hasFeedbacked) {
-                    currentUserFeedback = feedbackDAO.getUserFeedback(currentUser.getUserId(), productId);
-                }
-                
-                // Check for each feedback user if they purchased
-                for (Feedback fb : feedbacks) {
-                    if (!hasPurchasedMap.containsKey(fb.getUserId())) {
-                        boolean purchased = feedbackDAO.hasUserPurchasedProduct(fb.getUserId(), productId);
-                        hasPurchasedMap.put(fb.getUserId(), purchased);
-                    }
+                    currentUserFeedback = feedbackDAO.getUserFeedback(currentUser.getUserId(), providerStorageId);
                 }
             }
             
             request.setAttribute("feedbacks", feedbacks);
-            request.setAttribute("hasPurchasedMap", hasPurchasedMap);
             request.setAttribute("currentUserFeedback", currentUserFeedback);
             // Forward to JSP
             request.getRequestDispatcher("/view/ProductDetail.jsp").forward(request, response);

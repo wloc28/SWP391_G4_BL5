@@ -10,7 +10,7 @@ import java.util.List;
 public class FeedbackDAO {
     
     public boolean addFeedback(Feedback feedback) throws SQLException {
-        String sql = "INSERT INTO feedbacks (user_id, product_id, content, rating, is_visible, created_at) " +
+        String sql = "INSERT INTO feedbacks (user_id, provider_storage_id, content, rating, is_visible, created_at) " +
                      "VALUES (?, ?, ?, ?, 1, NOW())";
         
         try (Connection conn = DBConnection.getConnection();
@@ -53,7 +53,7 @@ public class FeedbackDAO {
         String sql = "SELECT f.*, u.full_name " +
                      "FROM feedbacks f " +
                      "INNER JOIN users u ON f.user_id = u.user_id " +
-                     "WHERE f.product_id = ? AND f.is_visible = 1 " +
+                     "WHERE f.provider_storage_id = ? AND f.is_visible = 1 AND f.is_deleted = 0 " +
                      "ORDER BY f.created_at DESC";
         
         try (Connection conn = DBConnection.getConnection();
@@ -77,7 +77,7 @@ public class FeedbackDAO {
     
     public boolean hasUserFeedbackedProduct(int userId, int productId) throws SQLException {
         String sql = "SELECT COUNT(*) as count FROM feedbacks " +
-                     "WHERE user_id = ? AND product_id = ?";
+                     "WHERE user_id = ? AND provider_storage_id = ? AND is_deleted = 0";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -96,7 +96,7 @@ public class FeedbackDAO {
     
     public boolean hasUserPurchasedProduct(int userId, int productId) throws SQLException {
         String sql = "SELECT COUNT(*) as count FROM orders " +
-                     "WHERE user_id = ? AND product_id = ? AND status = 'COMPLETED'";
+                     "WHERE user_id = ? AND provider_storage_id = ? AND status = 'COMPLETED'";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -116,7 +116,7 @@ public class FeedbackDAO {
     // Lấy feedback của user hiện tại cho sản phẩm (để sửa rating)
     public Feedback getUserFeedback(int userId, int productId) throws SQLException {
         String sql = "SELECT f.* FROM feedbacks f " +
-                     "WHERE f.user_id = ? AND f.product_id = ?";
+                     "WHERE f.user_id = ? AND f.provider_storage_id = ? AND f.is_deleted = 0";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -155,10 +155,12 @@ public class FeedbackDAO {
         Feedback feedback = new Feedback();
         feedback.setFeedbackId(rs.getInt("feedback_id"));
         feedback.setUserId(rs.getInt("user_id"));
-        feedback.setProductId(rs.getInt("product_id"));
+        feedback.setProductId(rs.getInt("provider_storage_id"));
         feedback.setContent(rs.getString("content"));
         feedback.setRating(rs.getObject("rating") != null ? rs.getInt("rating") : null);
+        feedback.setStatus(rs.getString("status"));
         feedback.setVisible(rs.getBoolean("is_visible"));
+        feedback.setDeleted(rs.getBoolean("is_deleted"));
         feedback.setCreatedAt(rs.getTimestamp("created_at"));
         feedback.setUpdatedAt(rs.getTimestamp("updated_at"));
         feedback.setAdminReply(rs.getString("admin_reply"));

@@ -44,15 +44,17 @@ public class FeedbackController extends HttpServlet {
             }
             
             String productIdStr = request.getParameter("productId");
+            String code = request.getParameter("code");
+            String providerIdStr = request.getParameter("providerId");
             String content = request.getParameter("content");
             String ratingStr = request.getParameter("rating");
             
             if (productIdStr == null) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productIdStr + "&error=missing_fields");
+                response.sendRedirect(request.getContextPath() + "/products?error=missing_fields");
                 return;
             }
             
-            int productId = Integer.parseInt(productIdStr);
+            int providerStorageId = Integer.parseInt(productIdStr); // productId thực ra là provider_storage_id
             Integer rating = null;
             if (ratingStr != null && !ratingStr.isEmpty()) {
                 rating = Integer.parseInt(ratingStr);
@@ -61,40 +63,49 @@ public class FeedbackController extends HttpServlet {
             
             // Kiểm tra phải có ít nhất rating hoặc content
             if (rating == null && (content == null || content.trim().isEmpty())) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=rating_or_content_required");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "rating_or_content_required");
+                response.sendRedirect(redirectUrl);
                 return;
             }
             
             // Validate content length (tối đa 100 ký tự)
             if (content != null && content.length() > 100) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=content_too_long");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "content_too_long");
+                response.sendRedirect(redirectUrl);
                 return;
             }
             
             Feedback feedback = new Feedback();
             feedback.setUserId(user.getUserId());
-            feedback.setProductId(productId);
+            feedback.setProductId(providerStorageId); // Lưu provider_storage_id vào productId field
             feedback.setContent(content != null ? content.trim() : null);
             feedback.setRating(rating);
             
             if (feedbackDAO.addFeedback(feedback)) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&success=feedback_added");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "success=feedback_added");
+                response.sendRedirect(redirectUrl);
             } else {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=feedback_failed");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "error=feedback_failed");
+                response.sendRedirect(redirectUrl);
             }
             
         } catch (SQLException e) {
             e.printStackTrace();
-            String productId = request.getParameter("productId");
+            String code = request.getParameter("code");
+            String providerIdStr = request.getParameter("providerId");
             if (e.getMessage() != null && e.getMessage().contains("đã feedback")) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=already_feedbacked");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "error=already_feedbacked");
+                response.sendRedirect(redirectUrl);
             } else {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=server_error");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "error=server_error");
+                response.sendRedirect(redirectUrl);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            String productId = request.getParameter("productId");
-            response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=server_error");
+            String code = request.getParameter("code");
+            String providerIdStr = request.getParameter("providerId");
+            String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "error=server_error");
+            response.sendRedirect(redirectUrl);
         }
     }
     
@@ -109,15 +120,18 @@ public class FeedbackController extends HttpServlet {
             
             String feedbackIdStr = request.getParameter("feedbackId");
             String productIdStr = request.getParameter("productId");
+            String code = request.getParameter("code");
+            String providerIdStr = request.getParameter("providerId");
             String ratingStr = request.getParameter("rating");
             
             if (feedbackIdStr == null || productIdStr == null) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productIdStr);
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, null);
+                response.sendRedirect(redirectUrl);
                 return;
             }
             
             int feedbackId = Integer.parseInt(feedbackIdStr);
-            int productId = Integer.parseInt(productIdStr);
+            int providerStorageId = Integer.parseInt(productIdStr); // productId thực ra là provider_storage_id
             Integer rating = null;
             if (ratingStr != null && !ratingStr.isEmpty()) {
                 rating = Integer.parseInt(ratingStr);
@@ -125,23 +139,56 @@ public class FeedbackController extends HttpServlet {
             }
             
             // Verify that this feedback belongs to the current user
-            Feedback feedback = feedbackDAO.getUserFeedback(user.getUserId(), productId);
+            Feedback feedback = feedbackDAO.getUserFeedback(user.getUserId(), providerStorageId);
             if (feedback == null || feedback.getFeedbackId() != feedbackId) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=unauthorized");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "error=unauthorized");
+                response.sendRedirect(redirectUrl);
                 return;
             }
             
             if (feedbackDAO.updateRating(feedbackId, rating)) {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&success=rating_updated");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "success=rating_updated");
+                response.sendRedirect(redirectUrl);
             } else {
-                response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId + "&error=rating_update_failed");
+                String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, "error=rating_update_failed");
+                response.sendRedirect(redirectUrl);
             }
             
         } catch (Exception e) {
             e.printStackTrace();
-            String productId = request.getParameter("productId");
-            response.sendRedirect(request.getContextPath() + "/product-detail?id=" + productId);
+            String code = request.getParameter("code");
+            String providerIdStr = request.getParameter("providerId");
+            String redirectUrl = buildProductDetailUrl(request, code, providerIdStr, null);
+            response.sendRedirect(redirectUrl);
         }
+    }
+    
+    // Helper method để build URL redirect về product detail
+    private String buildProductDetailUrl(HttpServletRequest request, String code, String providerIdStr, String param) {
+        String contextPath = request.getContextPath();
+        
+        // Nếu thiếu code hoặc providerId, redirect về products
+        if (code == null || code.isEmpty() || providerIdStr == null || providerIdStr.isEmpty()) {
+            StringBuilder url = new StringBuilder(contextPath).append("/products");
+            if (param != null && !param.isEmpty()) {
+                url.append("?").append(param);
+            }
+            return url.toString();
+        }
+        
+        StringBuilder url = new StringBuilder(contextPath);
+        url.append("/product-detail?code=");
+        try {
+            url.append(java.net.URLEncoder.encode(code, java.nio.charset.StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            url.append(code);
+        }
+        url.append("&providerId=").append(providerIdStr);
+        
+        if (param != null && !param.isEmpty()) {
+            url.append("&").append(param);
+        }
+        return url.toString();
     }
 }
 
