@@ -475,6 +475,12 @@
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
+                        <a href="${pageContext.request.contextPath}/admin/reports">
+                            <i class="bi bi-graph-up"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
                         <a href="${pageContext.request.contextPath}/admin/users">
                             <i class="bi bi-people"></i>
                             <span>Quản lý người dùng</span>

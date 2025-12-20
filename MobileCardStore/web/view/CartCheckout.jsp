@@ -66,7 +66,7 @@
                             <!-- Order Items -->
                             <div class="card mb-4">
                                 <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0">Sản phẩm đặt mua</h5>
+                                    <h5 class="mb-0">Sản phẩm mua</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive">

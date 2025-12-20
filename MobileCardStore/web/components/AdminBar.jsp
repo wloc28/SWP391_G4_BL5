@@ -5,6 +5,9 @@
     <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard">
         <i class="bi bi-speedometer2 me-2"></i>Dashboard
     </a>
+    <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/reports">
+        <i class="bi bi-graph-up me-2"></i>Reports
+    </a>
     <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users">
         <i class="bi bi-people me-2"></i>User list
     </a>
