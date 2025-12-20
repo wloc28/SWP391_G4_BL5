@@ -1,8 +1,11 @@
 package controller.user;
 
 import DAO.user.ProductDAO;
+import DAO.user.FeedbackDAO;
 import Models.ProductDisplay;
 import Models.Provider;
+import Models.Feedback;
+import Models.User;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -212,11 +215,31 @@ public class ProductServlet extends HttpServlet {
             int stock = productDAO.getAvailableStock(productCode, providerId);
             request.setAttribute("product", product);
             request.setAttribute("stock", stock);
-
             // Get related products (same provider, max 8 products)
             List<ProductDisplay> relatedProducts = productDAO.getRelatedProducts(productCode, providerId, product.getProviderId(), 8);
             request.setAttribute("relatedProducts", relatedProducts);
-
+            
+            // Load feedbacks for this product
+            FeedbackDAO feedbackDAO = new FeedbackDAO();
+            int providerStorageId = product.getProviderStorageId(); // Lấy provider_storage_id từ product
+            List<Feedback> feedbacks = feedbackDAO.getFeedbacksByProductId(providerStorageId);
+            
+            // Check if current user has already feedbacked
+            User currentUser = (User) request.getSession().getAttribute("user");
+            Feedback currentUserFeedback = null;
+            if (currentUser != null) {
+                // Check if current user has already feedbacked
+                boolean hasFeedbacked = feedbackDAO.hasUserFeedbackedProduct(currentUser.getUserId(), providerStorageId);
+                request.setAttribute("hasFeedbacked", hasFeedbacked);
+                
+                // Get current user's feedback (để có thể sửa rating)
+                if (hasFeedbacked) {
+                    currentUserFeedback = feedbackDAO.getUserFeedback(currentUser.getUserId(), providerStorageId);
+                }
+            }
+            
+            request.setAttribute("feedbacks", feedbacks);
+            request.setAttribute("currentUserFeedback", currentUserFeedback);
             // Forward to JSP
             request.getRequestDispatcher("/view/ProductDetail.jsp").forward(request, response);
 

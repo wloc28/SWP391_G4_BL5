@@ -10,6 +10,7 @@ public class ProductDisplay {
     private String productCode;
     private String productName;
     private int providerId;
+    private int providerStorageId; // ID từ bảng provider_storage
     private String providerName;
     private String providerType;
     private BigDecimal price;
@@ -53,6 +54,14 @@ public class ProductDisplay {
     
     public void setProviderId(int providerId) {
         this.providerId = providerId;
+    }
+    
+    public int getProviderStorageId() {
+        return providerStorageId;
+    }
+    
+    public void setProviderStorageId(int providerStorageId) {
+        this.providerStorageId = providerStorageId;
     }
     
     public String getProviderName() {
@@ -157,4 +166,5 @@ public class ProductDisplay {
                 '}';
     }
 }
+
 
