@@ -139,6 +139,31 @@ public class UserDAO {
     }
 
     /**
+     * Get all users (for dropdown/filter purposes).
+     */
+    public List<User> getAllUsers() throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT user_id, username, full_name, email, phone_number FROM users WHERE is_deleted = 0 ORDER BY username";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setUsername(rs.getString("username"));
+                user.setFullName(rs.getString("full_name"));
+                user.setEmail(rs.getString("email"));
+                user.setPhoneNumber(rs.getString("phone_number"));
+                users.add(user);
+            }
+        }
+        
+        return users;
+    }
+
+    /**
      * Get user detail by id.
      */
     public User getUserById(int userId) throws SQLException {

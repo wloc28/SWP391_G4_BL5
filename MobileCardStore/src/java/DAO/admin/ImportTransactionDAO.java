@@ -45,9 +45,10 @@ public class ImportTransactionDAO {
     }
     
     /**
-     * Lấy lịch sử nhập hàng
+     * Lấy lịch sử nhập hàng với phân trang
      */
-    public List<ImportTransaction> getImportHistory(String providerName, Date fromDate, Date toDate) throws SQLException {
+    public List<ImportTransaction> getImportHistory(String providerName, Date fromDate, Date toDate, 
+                                                     int page, int pageSize) throws SQLException {
         List<ImportTransaction> transactions = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT it.*, ps.product_code, ps.product_name, ps.price, p.provider_name ");
@@ -75,6 +76,66 @@ public class ImportTransactionDAO {
         
         sql.append("ORDER BY it.created_at DESC");
         
+        // Add pagination
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+            int offset = (page - 1) * pageSize;
+            params.add(pageSize);
+            params.add(offset);
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int index = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    ps.setString(index++, (String) param);
+                } else if (param instanceof Date) {
+                    ps.setDate(index++, (Date) param);
+                } else if (param instanceof Integer) {
+                    ps.setInt(index++, (Integer) param);
+                }
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    transactions.add(mapResultSetToImportTransaction(rs));
+                }
+            }
+        }
+        
+        return transactions;
+    }
+    
+    /**
+     * Đếm tổng số import transactions (cho phân trang)
+     */
+    public int countImportHistory(String providerName, Date fromDate, Date toDate) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) as total ");
+        sql.append("FROM import_transactions it ");
+        sql.append("INNER JOIN provider_storage ps ON it.provider_storage_id = ps.provider_storage_id ");
+        sql.append("INNER JOIN providers p ON ps.provider_id = p.provider_id ");
+        sql.append("WHERE it.is_deleted = 0 ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        if (providerName != null && !providerName.isEmpty()) {
+            sql.append("AND p.provider_name = ? ");
+            params.add(providerName);
+        }
+        
+        if (fromDate != null) {
+            sql.append("AND DATE(it.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        
+        if (toDate != null) {
+            sql.append("AND DATE(it.created_at) <= ? ");
+            params.add(toDate);
+        }
+        
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             
@@ -88,13 +149,13 @@ public class ImportTransactionDAO {
             }
             
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    transactions.add(mapResultSetToImportTransaction(rs));
+                if (rs.next()) {
+                    return rs.getInt("total");
                 }
             }
         }
         
-        return transactions;
+        return 0;
     }
     
     /**

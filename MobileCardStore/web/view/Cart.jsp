@@ -123,11 +123,35 @@
                                 
                                 <c:if test="${empty cart.voucher}">
                                     <div class="mb-3">
-                                        <label class="form-label">Mã voucher</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="voucherCode" placeholder="Nhập mã voucher">
-                                            <button class="btn btn-outline-primary" onclick="applyVoucher()">Áp dụng</button>
-                                        </div>
+                                        <label class="form-label">Mã giảm giá</label>
+                                        <c:choose>
+                                            <c:when test="${availableVouchers != null && not empty availableVouchers && availableVouchers.size() > 0}">
+                                                <select class="form-select" id="voucherCode" onchange="applyVoucherFromDropdown()">
+                                                    <option value="">-- Chọn mã giảm giá --</option>
+                                                    <c:forEach var="voucher" items="${availableVouchers}">
+                                                        <option value="${voucher.code}">
+                                                            ${voucher.code} - 
+                                                            <c:choose>
+                                                                <c:when test="${voucher.discountType == 'PERCENT'}">
+                                                                    Giảm <fmt:formatNumber value="${voucher.discountValue}" type="number" maxFractionDigits="0"/>%
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    Giảm <fmt:formatNumber value="${voucher.discountValue}" type="number" maxFractionDigits="0"/> đ
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                            <c:if test="${voucher.minOrderValue != null && voucher.minOrderValue.doubleValue() > 0}">
+                                                                (Đơn tối thiểu <fmt:formatNumber value="${voucher.minOrderValue}" type="number" maxFractionDigits="0"/> đ)
+                                                            </c:if>
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="alert alert-info mb-0">
+                                                    <small><i class="bi bi-info-circle"></i> Hiện không có mã giảm giá khả dụng cho đơn hàng này</small>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
                                         <div id="voucherMessage" class="mt-2"></div>
                                     </div>
                                 </c:if>
@@ -208,16 +232,17 @@
                 });
             }
             
-            function applyVoucher() {
-                const voucherCode = document.getElementById('voucherCode').value.trim();
+            function applyVoucherFromDropdown() {
+                const voucherSelect = document.getElementById('voucherCode');
+                const voucherCode = voucherSelect ? voucherSelect.value.trim() : '';
                 const messageDiv = document.getElementById('voucherMessage');
                 
                 if (!voucherCode) {
-                    messageDiv.innerHTML = '<div class="text-danger">Vui lòng nhập mã voucher</div>';
+                    messageDiv.innerHTML = '';
                     return;
                 }
                 
-                messageDiv.innerHTML = '<div class="text-info">Đang xử lý...</div>';
+                messageDiv.innerHTML = '<div class="text-info"><small>Đang xử lý...</small></div>';
                 
                 fetch('${pageContext.request.contextPath}/cart/apply-voucher', {
                     method: 'POST',
@@ -229,16 +254,29 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        messageDiv.innerHTML = '<div class="text-success">' + data.message + '</div>';
+                        messageDiv.innerHTML = '<div class="text-success"><small>' + data.message + '</small></div>';
                         setTimeout(() => location.reload(), 1000);
                     } else {
-                        messageDiv.innerHTML = '<div class="text-danger">' + data.message + '</div>';
+                        messageDiv.innerHTML = '<div class="text-danger"><small>' + data.message + '</small></div>';
+                        // Reset dropdown về giá trị rỗng
+                        if (voucherSelect) {
+                            voucherSelect.value = '';
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    messageDiv.innerHTML = '<div class="text-danger">Có lỗi xảy ra</div>';
+                    messageDiv.innerHTML = '<div class="text-danger"><small>Có lỗi xảy ra</small></div>';
+                    // Reset dropdown về giá trị rỗng
+                    if (voucherSelect) {
+                        voucherSelect.value = '';
+                    }
                 });
+            }
+            
+            // Giữ lại function cũ để tương thích (nếu có nơi nào gọi)
+            function applyVoucher() {
+                applyVoucherFromDropdown();
             }
             
             function removeVoucher() {

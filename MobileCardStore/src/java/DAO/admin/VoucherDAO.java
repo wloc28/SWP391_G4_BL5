@@ -2,6 +2,7 @@ package DAO.admin;
 
 import DAO.DBConnection;
 import Models.Voucher;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -349,6 +350,35 @@ public class VoucherDAO {
             while (rs.next()) {
                 Voucher voucher = mapResultSetToVoucher(rs);
                 vouchers.add(voucher);
+            }
+        }
+        
+        return vouchers;
+    }
+    
+    /**
+     * Lấy danh sách voucher available phù hợp với giá trị đơn hàng
+     * Chỉ trả về các voucher có minOrderValue <= orderValue
+     */
+    public List<Voucher> getAvailableVouchersForOrder(BigDecimal orderValue) throws SQLException {
+        List<Voucher> vouchers = new ArrayList<>();
+        String sql = "SELECT * FROM vouchers " +
+                     "WHERE is_deleted = 0 AND status = 'ACTIVE' " +
+                     "AND (expiry_date IS NULL OR expiry_date >= NOW()) " +
+                     "AND (usage_limit IS NULL OR used_count < usage_limit) " +
+                     "AND min_order_value <= ? " +
+                     "ORDER BY discount_value DESC, created_at DESC";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setBigDecimal(1, orderValue);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Voucher voucher = mapResultSetToVoucher(rs);
+                    vouchers.add(voucher);
+                }
             }
         }
         
