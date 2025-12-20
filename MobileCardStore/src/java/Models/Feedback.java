@@ -9,27 +9,32 @@ import java.sql.Timestamp;
 public class Feedback {
     private int feedbackId;
     private int userId;
+    private int productId;
     private String content;
     private Integer rating; // 1-5
+    private String adminReply;
+    private Timestamp adminReplyAt;
     private String status; // 'PENDING', 'RESOLVED', 'HIDDEN'
     private boolean isVisible;
+    private boolean isDeleted;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    private boolean isDeleted;
     
     // Reference to User (optional, for convenience)
     private User user;
     
+    // Product name (for display, not stored in DB)
+    private String productName;
+    
     // Constructors
     public Feedback() {
-        this.status = "PENDING";
         this.isVisible = false;
-        this.isDeleted = false;
     }
     
-    public Feedback(int userId, String content) {
+    public Feedback(int userId, int productId, String content) {
         this();
         this.userId = userId;
+        this.productId = productId;
         this.content = content;
     }
     
@@ -48,6 +53,14 @@ public class Feedback {
     
     public void setUserId(int userId) {
         this.userId = userId;
+    }
+    
+    public int getProductId() {
+        return productId;
+    }
+    
+    public void setProductId(int productId) {
+        this.productId = productId;
     }
     
     public String getContent() {
@@ -70,12 +83,20 @@ public class Feedback {
         this.rating = rating;
     }
     
-    public String getStatus() {
-        return status;
+    public String getAdminReply() {
+        return adminReply;
     }
     
-    public void setStatus(String status) {
-        this.status = status;
+    public void setAdminReply(String adminReply) {
+        this.adminReply = adminReply;
+    }
+    
+    public Timestamp getAdminReplyAt() {
+        return adminReplyAt;
+    }
+    
+    public void setAdminReplyAt(Timestamp adminReplyAt) {
+        this.adminReplyAt = adminReplyAt;
     }
     
     public boolean isVisible() {
@@ -84,6 +105,22 @@ public class Feedback {
     
     public void setVisible(boolean visible) {
         isVisible = visible;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+    
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
     
     public Timestamp getCreatedAt() {
@@ -102,14 +139,6 @@ public class Feedback {
         this.updatedAt = updatedAt;
     }
     
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-    
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
-    }
-    
     public User getUser() {
         return user;
     }
@@ -118,13 +147,21 @@ public class Feedback {
         this.user = user;
     }
     
+    public String getProductName() {
+        return productName;
+    }
+    
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    
     @Override
     public String toString() {
         return "Feedback{" +
                 "feedbackId=" + feedbackId +
                 ", userId=" + userId +
+                ", productId=" + productId +
                 ", rating=" + rating +
-                ", status='" + status + '\'' +
                 ", isVisible=" + isVisible +
                 '}';
     }

@@ -84,6 +84,7 @@ public class ProductDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ProductDisplay product = new ProductDisplay();
+                    product.setProviderStorageId(rs.getInt("provider_storage_id"));
                     product.setProductCode(rs.getString("product_code"));
                     product.setProductName(rs.getString("product_name"));
                     product.setProviderId(rs.getInt("provider_id"));

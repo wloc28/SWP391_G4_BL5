@@ -508,6 +508,9 @@
                         <a href="${pageContext.request.contextPath}/admin/provider-import">
                             <i class="bi bi-cart"></i>
                             <span>Nhập hàng </span>
+                        <a href="${pageContext.request.contextPath}/admin/feedback">
+                            <i class="bi bi-chat-left-text"></i>
+                            <span>Quản lý phản hồi</span>
                         </a>
                     </li>
                 </ul>
