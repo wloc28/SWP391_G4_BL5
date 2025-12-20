@@ -484,6 +484,22 @@
                 font-weight: 600;
                 color: #198754;
             }
+            
+            /* Price Input Error */
+            .manual-price-input.is-invalid {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+            }
+            
+            .manual-price-input.is-valid {
+                border-color: #198754;
+                box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+            }
+            
+            #priceErrorMsg {
+                font-size: 0.75rem;
+                margin-top: 2px;
+            }
         </style>
     </head>
     <body>
@@ -662,18 +678,21 @@
                                     </button>
                                     
                                     <!-- Manual Price Input -->
-                                    <div class="d-flex align-items-center gap-2 ms-3">
-                                        <input type="number" class="form-control form-control-sm manual-price-input" 
-                                               id="minPriceInput" 
-                                               placeholder="Từ" 
-                                               min="0" 
-                                               step="1000">
-                                        <span class="text-muted">-</span>
-                                        <input type="number" class="form-control form-control-sm manual-price-input" 
-                                               id="maxPriceInput" 
-                                               placeholder="Đến" 
-                                               min="0" 
-                                               step="1000">
+                                    <div class="d-flex flex-column gap-1 ms-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="number" class="form-control form-control-sm manual-price-input" 
+                                                   id="minPriceInput" 
+                                                   placeholder="Từ" 
+                                                   min="0" 
+                                                   step="1000">
+                                            <span class="text-muted">-</span>
+                                            <input type="number" class="form-control form-control-sm manual-price-input" 
+                                                   id="maxPriceInput" 
+                                                   placeholder="Đến" 
+                                                   min="0" 
+                                                   step="1000">
+                                        </div>
+                                        <div class="text-danger small" id="priceErrorMsg" style="display: none;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -850,6 +869,8 @@
                 var maxPriceInput = document.getElementById('maxPriceInput');
                 if (minPriceInput) minPriceInput.value = min || '';
                 if (maxPriceInput) maxPriceInput.value = max || '';
+                // Validate after updating
+                validatePriceRange();
                 document.getElementById('pageInput').value = 1;
                 document.getElementById('filterForm').submit();
             }
@@ -861,38 +882,76 @@
                 var maxPriceInput = document.getElementById('maxPriceInput');
                 if (minPriceInput) minPriceInput.value = '';
                 if (maxPriceInput) maxPriceInput.value = '';
+                // Clear validation state
+                validatePriceRange();
                 document.getElementById('pageInput').value = 1;
                 document.getElementById('filterForm').submit();
             }
             
+            // Price validation function (defined globally so it can be used by applyManualPriceRange)
+            function validatePriceRange() {
+                var minInput = document.getElementById('minPriceInput');
+                var maxInput = document.getElementById('maxPriceInput');
+                var errorMsg = document.getElementById('priceErrorMsg');
+                
+                if (!minInput || !maxInput || !errorMsg) return true;
+                
+                var minValue = minInput.value.trim();
+                var maxValue = maxInput.value.trim();
+                
+                // Reset validation state
+                minInput.classList.remove('is-invalid', 'is-valid');
+                maxInput.classList.remove('is-invalid', 'is-valid');
+                errorMsg.style.display = 'none';
+                errorMsg.textContent = '';
+                
+                // If both are empty, no validation needed
+                if (!minValue && !maxValue) {
+                    return true;
+                }
+                
+                // Validate individual values
+                var minNum = minValue ? parseFloat(minValue) : null;
+                var maxNum = maxValue ? parseFloat(maxValue) : null;
+                
+                // Check for negative values
+                if (minNum !== null && minNum < 0) {
+                    minInput.classList.add('is-invalid');
+                    errorMsg.textContent = 'Giá tối thiểu không được nhỏ hơn 0';
+                    errorMsg.style.display = 'block';
+                    return false;
+                }
+                
+                if (maxNum !== null && maxNum < 0) {
+                    maxInput.classList.add('is-invalid');
+                    errorMsg.textContent = 'Giá tối đa không được nhỏ hơn 0';
+                    errorMsg.style.display = 'block';
+                    return false;
+                }
+                
+                // Check if min > max when both are provided
+                if (minNum !== null && maxNum !== null && minNum > maxNum) {
+                    minInput.classList.add('is-invalid');
+                    maxInput.classList.add('is-invalid');
+                    errorMsg.textContent = 'Giá tối thiểu không được lớn hơn giá tối đa';
+                    errorMsg.style.display = 'block';
+                    return false;
+                }
+                
+                // Valid state
+                if (minValue) minInput.classList.add('is-valid');
+                if (maxValue) maxInput.classList.add('is-valid');
+                return true;
+            }
+            
             function applyManualPriceRange() {
+                // Validate before applying
+                if (!validatePriceRange()) {
+                    return;
+                }
+                
                 var min = document.getElementById('minPriceInput').value;
                 var max = document.getElementById('maxPriceInput').value;
-                
-                if ((min && isNaN(min)) || (max && isNaN(max))) {
-                    alert('Vui lòng nhập số hợp lệ');
-                    return;
-                }
-                
-                // Validate không cho nhập số âm
-                if (min && parseFloat(min) < 0) {
-                    alert('Giá tối thiểu không được nhỏ hơn 0');
-                    document.getElementById('minPriceInput').value = '';
-                    document.getElementById('minPriceInput').focus();
-                    return;
-                }
-                
-                if (max && parseFloat(max) < 0) {
-                    alert('Giá tối đa không được nhỏ hơn 0');
-                    document.getElementById('maxPriceInput').value = '';
-                    document.getElementById('maxPriceInput').focus();
-                    return;
-                }
-                
-                if (min && max && parseFloat(min) > parseFloat(max)) {
-                    alert('Giá tối thiểu không được lớn hơn giá tối đa');
-                    return;
-                }
                 
                 document.getElementById('minPrice').value = min || '';
                 document.getElementById('maxPrice').value = max || '';
@@ -914,14 +973,22 @@
                     maxPriceInput.value = maxPriceHidden.value;
                 }
                 
+                // Validate on page load if values exist
+                validatePriceRange();
+                
                 // Prevent negative numbers in price inputs and auto-apply on Enter
                 if (minPriceInput) {
                     minPriceInput.addEventListener('input', function() {
                         var value = parseFloat(this.value);
                         if (value < 0) {
                             this.value = '';
-                            alert('Giá không được nhỏ hơn 0');
                         }
+                        // Real-time validation
+                        validatePriceRange();
+                    });
+                    
+                    minPriceInput.addEventListener('blur', function() {
+                        validatePriceRange();
                     });
                     
                     minPriceInput.addEventListener('keydown', function(e) {
@@ -929,10 +996,12 @@
                         if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
                             e.preventDefault();
                         }
-                        // Auto-apply on Enter
+                        // Auto-apply on Enter (only if valid)
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            applyManualPriceRange();
+                            if (validatePriceRange()) {
+                                applyManualPriceRange();
+                            }
                         }
                     });
                 }
@@ -942,8 +1011,13 @@
                         var value = parseFloat(this.value);
                         if (value < 0) {
                             this.value = '';
-                            alert('Giá không được nhỏ hơn 0');
                         }
+                        // Real-time validation
+                        validatePriceRange();
+                    });
+                    
+                    maxPriceInput.addEventListener('blur', function() {
+                        validatePriceRange();
                     });
                     
                     maxPriceInput.addEventListener('keydown', function(e) {
@@ -951,10 +1025,12 @@
                         if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
                             e.preventDefault();
                         }
-                        // Auto-apply on Enter
+                        // Auto-apply on Enter (only if valid)
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            applyManualPriceRange();
+                            if (validatePriceRange()) {
+                                applyManualPriceRange();
+                            }
                         }
                     });
                 }
@@ -983,7 +1059,13 @@
                 // Ensure manual price inputs are copied to hidden fields before submitting the form
                 var filterForm = document.getElementById('filterForm');
                 if (filterForm) {
-                    filterForm.addEventListener('submit', function() {
+                    filterForm.addEventListener('submit', function(event) {
+                        // Validate price range before submitting
+                        if (!validatePriceRange()) {
+                            event.preventDefault();
+                            return false;
+                        }
+                        
                         var minPriceInput = document.getElementById('minPriceInput');
                         var maxPriceInput = document.getElementById('maxPriceInput');
                         var minHidden = document.getElementById('minPrice');
