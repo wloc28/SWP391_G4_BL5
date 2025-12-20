@@ -12,9 +12,9 @@ import java.util.Properties;
 public class DBConnection {
 
  private static final String DB_URL =
-        "jdbc:mysql://localhost:3306/swp_card_store?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+        "jdbc:mysql://localhost:3306/swp_cart_store?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "1234";
+    private static final String DB_PASSWORD = "123456";
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
 
     static {

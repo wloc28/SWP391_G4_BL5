@@ -151,7 +151,9 @@
                                                 -
                                             </button>
                                             <input type="number" id="quantity" value="1" min="1" max="${stock}" 
-                                                   class="w-20 text-center border border-gray-300 rounded px-2 py-1 text-sm">
+                                                   class="w-20 text-center border border-gray-300 rounded px-2 py-1 text-sm"
+                                                   oninput="validateQuantity(this)"
+                                                   onblur="validateQuantity(this)">
                                             <button type="button" onclick="increaseQuantity()" 
                                                     class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm font-medium">
                                                 +
@@ -439,6 +441,16 @@
                 }
             }
             
+            function validateQuantity(input) {
+                let value = parseInt(input.value) || 1;
+                if (value < 1) {
+                    value = 1;
+                } else if (value > maxStock) {
+                    value = maxStock;
+                }
+                input.value = value;
+            }
+            
             function addToCart(productCode, providerId) {
                 <c:if test="${!isLoggedIn}">
                     alert('Vui lòng đăng nhập để mua hàng!');
@@ -446,7 +458,18 @@
                     return;
                 </c:if>
                 
-                const quantity = parseInt(document.getElementById('quantity').value) || 1;
+                const qtyInput = document.getElementById('quantity');
+                let quantity = parseInt(qtyInput.value) || 1;
+                
+                // Validate and auto-adjust quantity
+                if (quantity < 1) {
+                    quantity = 1;
+                    qtyInput.value = 1;
+                } else if (quantity > maxStock) {
+                    quantity = maxStock;
+                    qtyInput.value = maxStock;
+                }
+                
                 const button = event.target.closest('button');
                 const originalText = button.innerHTML;
                 
@@ -487,15 +510,10 @@
                         const cartUpdatedEvent = new Event('cartUpdated');
                         document.dispatchEvent(cartUpdatedEvent);
                         
-                        // Cập nhật badge giỏ hàng (sẽ reload sau 1 giây để cập nhật số lượng)
+                        // Cập nhật badge giỏ hàng (sẽ reload sau 2 giây để cập nhật số lượng sau khi hiển thị "Đã thêm!")
                         setTimeout(() => {
                             window.location.reload();
-                        }, 1000);
-                        
-                        // Show success message
-                        if (confirm('Đã thêm sản phẩm vào giỏ hàng!\nBạn có muốn xem giỏ hàng không?')) {
-                            window.location.href = '${contextPath}/cart/view';
-                        }
+                        }, 2000);
                     } else {
                         alert(data.message || 'Có lỗi xảy ra');
                         button.innerHTML = originalText;
@@ -517,7 +535,18 @@
                     return;
                 </c:if>
                 
-                const quantity = parseInt(document.getElementById('quantity').value) || 1;
+                const qtyInput = document.getElementById('quantity');
+                let quantity = parseInt(qtyInput.value) || 1;
+                
+                // Validate and auto-adjust quantity
+                if (quantity < 1) {
+                    quantity = 1;
+                    qtyInput.value = 1;
+                } else if (quantity > maxStock) {
+                    quantity = maxStock;
+                    qtyInput.value = maxStock;
+                }
+                
                 const button = event.target.closest('button');
                 const originalText = button.innerHTML;
                 

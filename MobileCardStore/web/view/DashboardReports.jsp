@@ -617,17 +617,7 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Order Status Statistics -->
-            <div class="chart-card">
-                <div class="chart-card-header">
-                    <div class="chart-card-title">Thống Kê Đơn Hàng Theo Trạng Thái</div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="ordersByStatusChart"></canvas>
-                </div>
-            </div>
-            </div>
+          </div>
         </div>
         
         <script>
