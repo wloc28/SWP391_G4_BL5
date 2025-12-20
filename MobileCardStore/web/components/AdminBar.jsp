@@ -1,4 +1,5 @@
 
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <div class="dropdown-menu" aria-labelledby="adminDropdown">
     <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard">
@@ -27,3 +28,17 @@
         <i class="bi bi-wallet2 me-2"></i>Transactions list
     </a>
 </div>
+    <body>
+        <div></div>
+        
+            <a class="dropdown-item" href="ulist">User list</a>
+            <a class="dropdown-item" href="plist">Product list</a>
+            <a class="dropdown-item" href="pklist">Storage list</a>
+            <div role="separator" class="dropdown-divider"></div>
+            <li class="dropdown-item"><a href="sliderslist">Order list</a></li>
+            <li class="dropdown-item"><a href="registrationslist">Transactions list</a></li>
+            <li class="dropdown-item"><a href="${pageContext.request.contextPath}/admin/feedback">Feedback list</a></li>
+        
+    </body>
+</html>
+
