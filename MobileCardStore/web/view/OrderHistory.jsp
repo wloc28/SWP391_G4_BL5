@@ -445,6 +445,60 @@
                                             <div class="product-info">
                                                 <div class="product-name">${order.productName}</div>
                                                 <div class="product-provider">${order.providerName}</div>
+                                                <c:if test="${not empty order.productLog and order.status eq 'COMPLETED'}">
+                                                    <div class="product-codes" style="margin-top: 8px; font-size: 0.85rem; color: #495057;">
+                                                        <%
+                                                            Models.Order orderObj = (Models.Order) pageContext.getAttribute("order");
+                                                            String productLogJson = orderObj != null ? orderObj.getProductLog() : null;
+                                                            if (productLogJson != null && productLogJson.trim().startsWith("[")) {
+                                                                try {
+                                                                    // Parse JSON array
+                                                                    String json = productLogJson.trim();
+                                                                    json = json.substring(1, json.length() - 1); // Remove [ and ]
+                                                                    String[] items = json.split("\\},\\{");
+                                                                    for (int i = 0; i < items.length; i++) {
+                                                                        String item = items[i];
+                                                                        if (i > 0) item = "{" + item;
+                                                                        if (i < items.length - 1) item = item + "}";
+                                                                        
+                                                                        // Extract serial_number and card_code
+                                                                        String serialNumber = "";
+                                                                        String cardCode = "";
+                                                                        
+                                                                        int serialIdx = item.indexOf("\"serial_number\"");
+                                                                        if (serialIdx >= 0) {
+                                                                            int start = item.indexOf(":", serialIdx) + 1;
+                                                                            int end = item.indexOf(",", start);
+                                                                            if (end < 0) end = item.indexOf("}", start);
+                                                                            serialNumber = item.substring(start, end).replaceAll("\"", "").trim();
+                                                                        }
+                                                                        
+                                                                        int cardIdx = item.indexOf("\"card_code\"");
+                                                                        if (cardIdx >= 0) {
+                                                                            int start = item.indexOf(":", cardIdx) + 1;
+                                                                            int end = item.indexOf(",", start);
+                                                                            if (end < 0) end = item.indexOf("}", start);
+                                                                            cardCode = item.substring(start, end).replaceAll("\"", "").trim();
+                                                                        }
+                                                                        
+                                                                        if (!serialNumber.isEmpty() || !cardCode.isEmpty()) {
+                                                                            out.println("<div style='padding: 6px 0; border-top: 1px solid #e9ecef; margin-top: 6px;'>");
+                                                                            if (!serialNumber.isEmpty()) {
+                                                                                out.println("<div><strong style='color: #495057;'>Serial:</strong> <span style='color: #198754; font-family: monospace;'>" + serialNumber + "</span></div>");
+                                                                            }
+                                                                            if (!cardCode.isEmpty()) {
+                                                                                out.println("<div style='margin-top: 4px;'><strong style='color: #495057;'>Card Code:</strong> <span style='color: #198754; font-family: monospace;'>" + cardCode + "</span></div>");
+                                                                            }
+                                                                            out.println("</div>");
+                                                                        }
+                                                                    }
+                                                                } catch (Exception e) {
+                                                                    out.println("<div style='color: #dc3545; font-size: 0.8rem;'>Lỗi hiển thị thông tin thẻ</div>");
+                                                                }
+                                                            }
+                                                        %>
+                                                    </div>
+                                                </c:if>
                                             </div>
                                         </td>
                                         <td>${order.quantity}</td>

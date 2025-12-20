@@ -321,45 +321,89 @@
             return;
         </c:if>
         
-        console.log('Adding to cart:', productCode, providerId, quantity);
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
         
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '${contextPath}/cart';
+        // Disable button and show loading
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
         
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'add';
-        form.appendChild(actionInput);
-        
-        const productCodeInput = document.createElement('input');
-        productCodeInput.type = 'hidden';
-        productCodeInput.name = 'productCode';
-        productCodeInput.value = productCode;
-        form.appendChild(productCodeInput);
-        
-        const providerIdInput = document.createElement('input');
-        providerIdInput.type = 'hidden';
-        providerIdInput.name = 'providerId';
-        providerIdInput.value = providerId;
-        form.appendChild(providerIdInput);
-        
-        const quantityInput = document.createElement('input');
-        quantityInput.type = 'hidden';
-        quantityInput.name = 'quantity';
-        quantityInput.value = quantity || 1;
-        form.appendChild(quantityInput);
-        
-        const redirectInput = document.createElement('input');
-        redirectInput.type = 'hidden';
-        redirectInput.name = 'redirect';
-        redirectInput.value = window.location.href.split('?')[0];
-        form.appendChild(redirectInput);
-        
-        document.body.appendChild(form);
-        console.log('Submitting form to:', form.action);
-        form.submit();
+        // Thêm vào giỏ hàng
+        fetch('${contextPath}/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'productCode=' + encodeURIComponent(productCode) + 
+                  '&providerId=' + providerId + 
+                  '&quantity=' + (quantity || 1)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Có lỗi xảy ra');
+                });
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Hiển thị thành công
+                button.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                button.classList.add('btn-success');
+                button.classList.remove('btn-outline-success');
+                
+                // Trigger cart update event để cập nhật badge
+                const cartUpdatedEvent = new Event('cartUpdated');
+                document.dispatchEvent(cartUpdatedEvent);
+                
+                // Cập nhật badge giỏ hàng
+                updateCartBadge();
+                
+                // Khôi phục button sau 2 giây
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-success');
+                    button.disabled = false;
+                }, 2000);
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+    
+    // Hàm cập nhật badge giỏ hàng
+    function updateCartBadge() {
+        <c:if test="${isLoggedIn}">
+        // Cập nhật badge bằng cách reload trang hoặc fetch số lượng
+        // Đơn giản nhất là reload trang để cập nhật badge
+        // Hoặc có thể fetch số lượng từ API nếu có
+        const badge = document.getElementById('cartBadge');
+        if (badge) {
+            // Trigger animation
+            badge.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                badge.style.animation = '';
+                // Reload để cập nhật số lượng chính xác
+                window.location.reload();
+            }, 500);
+        } else {
+            // Nếu chưa có badge, reload để hiển thị
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        }
+        </c:if>
     }
     
     function buyNow(productCode, providerId) {
@@ -369,45 +413,48 @@
             return;
         </c:if>
         
-        console.log('Buy now:', productCode, providerId);
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
         
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '${contextPath}/cart';
+        // Disable button and show loading
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> ...';
         
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'add';
-        form.appendChild(actionInput);
-        
-        const productCodeInput = document.createElement('input');
-        productCodeInput.type = 'hidden';
-        productCodeInput.name = 'productCode';
-        productCodeInput.value = productCode;
-        form.appendChild(productCodeInput);
-        
-        const providerIdInput = document.createElement('input');
-        providerIdInput.type = 'hidden';
-        providerIdInput.name = 'providerId';
-        providerIdInput.value = providerId;
-        form.appendChild(providerIdInput);
-        
-        const quantityInput = document.createElement('input');
-        quantityInput.type = 'hidden';
-        quantityInput.name = 'quantity';
-        quantityInput.value = '1';
-        form.appendChild(quantityInput);
-        
-        const redirectInput = document.createElement('input');
-        redirectInput.type = 'hidden';
-        redirectInput.name = 'redirect';
-        redirectInput.value = '${contextPath}/cart';
-        form.appendChild(redirectInput);
-        
-        document.body.appendChild(form);
-        console.log('Submitting form to:', form.action);
-        form.submit();
+        // Thêm vào giỏ hàng trước
+        fetch('${contextPath}/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'productCode=' + encodeURIComponent(productCode) + 
+                  '&providerId=' + providerId + 
+                  '&quantity=1'
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Có lỗi xảy ra');
+                });
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Thêm thành công, chuyển đến trang giỏ hàng
+                window.location.href = '${contextPath}/cart/view';
+            } else {
+                alert(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
     }
 </script>
 

@@ -626,6 +626,72 @@ public class ProductStorageDAO {
     }
     
     /**
+     * Lấy và đánh dấu sản phẩm là SOLD khi thanh toán
+     * Trả về danh sách ProductStorage với serial_number và card_code
+     */
+    public List<ProductStorage> getAndMarkAsSold(String productCode, int providerId, int quantity, int orderId) throws SQLException {
+        List<ProductStorage> soldItems = new ArrayList<>();
+        
+        // Lấy các sản phẩm AVAILABLE
+        String selectSql = """
+            SELECT * FROM product_storage 
+            WHERE product_code = ? AND provider_id = ? 
+            AND status = 'AVAILABLE' AND is_deleted = 0 
+            ORDER BY created_at ASC 
+            LIMIT ?
+            """;
+        
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false); // Bắt đầu transaction
+            
+            try (PreparedStatement selectPs = conn.prepareStatement(selectSql)) {
+                selectPs.setString(1, productCode);
+                selectPs.setInt(2, providerId);
+                selectPs.setInt(3, quantity);
+                
+                try (ResultSet rs = selectPs.executeQuery()) {
+                    while (rs.next()) {
+                        ProductStorage item = mapResultSetToStorage(rs);
+                        soldItems.add(item);
+                    }
+                }
+            }
+            
+            // Kiểm tra đủ số lượng không
+            if (soldItems.size() < quantity) {
+                conn.rollback();
+                throw new SQLException("Không đủ sản phẩm trong kho. Yêu cầu: " + quantity + ", có sẵn: " + soldItems.size());
+            }
+            
+            // Đánh dấu các sản phẩm là SOLD
+            String updateSql = """
+                UPDATE product_storage 
+                SET status = 'SOLD', 
+                    sold_at = NOW(), 
+                    sold_to_order_id = ?, 
+                    updated_at = NOW() 
+                WHERE storage_id = ?
+                """;
+            
+            try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
+                for (ProductStorage item : soldItems) {
+                    updatePs.setInt(1, orderId);
+                    updatePs.setInt(2, item.getStorageId());
+                    updatePs.addBatch();
+                }
+                updatePs.executeBatch();
+            }
+            
+            conn.commit(); // Commit transaction
+            return soldItems;
+            
+        } catch (SQLException e) {
+            // Rollback sẽ được thực hiện trong finally hoặc catch
+            throw e;
+        }
+    }
+    
+    /**
      * Map ResultSet to ProductStorage object
      */
     private ProductStorage mapResultSetToStorage(ResultSet rs) throws SQLException {

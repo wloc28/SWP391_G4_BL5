@@ -204,33 +204,6 @@ public class VoucherDAO {
     }
     
     /**
-     * Lấy danh sách voucher available (active, chưa hết hạn, chưa đạt giới hạn)
-     */
-    public List<Voucher> getAvailableVouchers() throws SQLException {
-        List<Voucher> vouchers = new ArrayList<>();
-        String sql = """
-            SELECT * FROM vouchers 
-            WHERE is_deleted = 0 
-            AND status = 'ACTIVE'
-            AND (expiry_date IS NULL OR expiry_date >= NOW())
-            AND (usage_limit IS NULL OR used_count < usage_limit)
-            ORDER BY created_at DESC
-            """;
-        
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            while (rs.next()) {
-                Voucher voucher = mapResultSetToVoucher(rs);
-                vouchers.add(voucher);
-            }
-        }
-        
-        return vouchers;
-    }
-    
-    /**
      * Kiểm tra code đã tồn tại chưa (trừ voucher hiện tại nếu đang edit)
      */
     public boolean isCodeExists(String code, int excludeVoucherId) throws SQLException {

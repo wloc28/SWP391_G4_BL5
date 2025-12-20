@@ -230,12 +230,24 @@ public class CartDAO {
     public boolean removeCartItem(int cartItemId) throws SQLException {
         String sql = "DELETE FROM cart_items WHERE cart_item_id = ?";
         
+        System.out.println("[CartDAO] removeCartItem called with cartItemId: " + cartItemId);
+        
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, cartItemId);
             
-            return ps.executeUpdate() > 0;
+            int rowsAffected = ps.executeUpdate();
+            System.out.println("[CartDAO] removeCartItem - rows affected: " + rowsAffected);
+            
+            boolean result = rowsAffected > 0;
+            System.out.println("[CartDAO] removeCartItem - result: " + result);
+            
+            return result;
+        } catch (SQLException e) {
+            System.err.println("[CartDAO] removeCartItem - SQLException: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
     }
     

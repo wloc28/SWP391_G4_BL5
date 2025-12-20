@@ -273,43 +273,67 @@
                 </c:if>
                 
                 const quantity = parseInt(document.getElementById('quantity').value) || 1;
+                const button = event.target.closest('button');
+                const originalText = button.innerHTML;
                 
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '${contextPath}/cart';
+                // Disable button and show loading
+                button.disabled = true;
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang thêm...';
                 
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'add';
-                form.appendChild(actionInput);
-                
-                const productCodeInput = document.createElement('input');
-                productCodeInput.type = 'hidden';
-                productCodeInput.name = 'productCode';
-                productCodeInput.value = productCode;
-                form.appendChild(productCodeInput);
-                
-                const providerIdInput = document.createElement('input');
-                providerIdInput.type = 'hidden';
-                providerIdInput.name = 'providerId';
-                providerIdInput.value = providerId;
-                form.appendChild(providerIdInput);
-                
-                const quantityInput = document.createElement('input');
-                quantityInput.type = 'hidden';
-                quantityInput.name = 'quantity';
-                quantityInput.value = quantity;
-                form.appendChild(quantityInput);
-                
-                const redirectInput = document.createElement('input');
-                redirectInput.type = 'hidden';
-                redirectInput.name = 'redirect';
-                redirectInput.value = window.location.href.split('?')[0];
-                form.appendChild(redirectInput);
-                
-                document.body.appendChild(form);
-                form.submit();
+                // Send request to add to cart
+                fetch('${contextPath}/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'productCode=' + encodeURIComponent(productCode) + 
+                          '&providerId=' + providerId + 
+                          '&quantity=' + quantity
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error(text || 'Có lỗi xảy ra');
+                        });
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        button.innerHTML = '<i class="bi bi-check-circle"></i> Đã thêm!';
+                        button.classList.add('bg-green-500');
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.classList.remove('bg-green-500');
+                            button.disabled = false;
+                        }, 2000);
+                        
+                        // Trigger cart update event to refresh badge
+                        const cartUpdatedEvent = new Event('cartUpdated');
+                        document.dispatchEvent(cartUpdatedEvent);
+                        
+                        // Cập nhật badge giỏ hàng (sẽ reload sau 1 giây để cập nhật số lượng)
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                        
+                        // Show success message
+                        if (confirm('Đã thêm sản phẩm vào giỏ hàng!\nBạn có muốn xem giỏ hàng không?')) {
+                            window.location.href = '${contextPath}/cart/view';
+                        }
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                });
             }
             
             function buyNow(productCode, providerId) {
@@ -320,43 +344,48 @@
                 </c:if>
                 
                 const quantity = parseInt(document.getElementById('quantity').value) || 1;
+                const button = event.target.closest('button');
+                const originalText = button.innerHTML;
                 
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '${contextPath}/cart';
+                // Disable button and show loading
+                button.disabled = true;
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
                 
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'add';
-                form.appendChild(actionInput);
-                
-                const productCodeInput = document.createElement('input');
-                productCodeInput.type = 'hidden';
-                productCodeInput.name = 'productCode';
-                productCodeInput.value = productCode;
-                form.appendChild(productCodeInput);
-                
-                const providerIdInput = document.createElement('input');
-                providerIdInput.type = 'hidden';
-                providerIdInput.name = 'providerId';
-                providerIdInput.value = providerId;
-                form.appendChild(providerIdInput);
-                
-                const quantityInput = document.createElement('input');
-                quantityInput.type = 'hidden';
-                quantityInput.name = 'quantity';
-                quantityInput.value = quantity;
-                form.appendChild(quantityInput);
-                
-                const redirectInput = document.createElement('input');
-                redirectInput.type = 'hidden';
-                redirectInput.name = 'redirect';
-                redirectInput.value = '${contextPath}/cart';
-                form.appendChild(redirectInput);
-                
-                document.body.appendChild(form);
-                form.submit();
+                // Thêm vào giỏ hàng trước
+                fetch('${contextPath}/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'productCode=' + encodeURIComponent(productCode) + 
+                          '&providerId=' + providerId + 
+                          '&quantity=' + quantity
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error(text || 'Có lỗi xảy ra');
+                        });
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Thêm thành công, chuyển đến trang giỏ hàng
+                        window.location.href = '${contextPath}/cart/view';
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                });
             }
         </script>
     </body>

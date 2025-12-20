@@ -54,23 +54,26 @@ public class ProductDAO {
     
     /**
      * Get product group by product_code and provider_id
+     * Query from provider_storage first, then check available stock in product_storage
      */
     public ProductDisplay getProductByCode(String productCode, int providerId) throws SQLException {
-        // Try with product_status table first
+        // Query từ provider_storage để lấy thông tin sản phẩm
         String sql = """
             SELECT 
+                ps.provider_storage_id,
+                ps.provider_id,
                 ps.product_code,
                 ps.product_name,
-                ps.provider_id,
-                ps.provider_name,
-                MAX(ps.price) as price,
-                MAX(ps.purchase_price) as purchase_price,
-                COUNT(*) as available_count,
-                COALESCE(pr.provider_type, 'TEL') as provider_type
-            FROM product_storage ps
-            LEFT JOIN providers pr ON ps.provider_id = pr.provider_id AND pr.is_deleted = 0 AND pr.status = 'ACTIVE'
-            WHERE ps.product_code = ? AND ps.provider_id = ? AND ps.is_deleted = 0
-            GROUP BY ps.product_code, ps.product_name, ps.provider_id, ps.provider_name, pr.provider_type
+                ps.price,
+                ps.purchase_price,
+                ps.available_quantity,
+                pr.provider_name,
+                COALESCE(pr.provider_type, 'TEL') as provider_type,
+                pr.status as provider_status
+            FROM provider_storage ps
+            LEFT JOIN providers pr ON ps.provider_id = pr.provider_id AND pr.is_deleted = 0
+            WHERE ps.product_code = ? AND ps.provider_id = ? AND ps.is_deleted = 0 AND ps.status = 'ACTIVE'
+            LIMIT 1
             """;
         
         try (Connection conn = DBConnection.getConnection();
@@ -80,29 +83,20 @@ public class ProductDAO {
             ps.setInt(2, providerId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    ProductDisplay product = mapResultSetToProductDisplay(rs);
-                    if (rs.getObject("provider_type") != null) {
-                        product.setProviderType(rs.getString("provider_type"));
-                    }
-                    // Try to get status from product_status table
-                    try {
-                        String statusSql = "SELECT status FROM product_status WHERE product_code = ? AND provider_id = ?";
-                        try (PreparedStatement statusPs = conn.prepareStatement(statusSql)) {
-                            statusPs.setString(1, productCode);
-                            statusPs.setInt(2, providerId);
-                            try (ResultSet statusRs = statusPs.executeQuery()) {
-                                if (statusRs.next()) {
-                                    product.setStatus(statusRs.getString("status"));
-                                    return product;
-                                }
-                            }
-                        }
-                    } catch (SQLException e) {
-                        // Table doesn't exist, calculate from available_count
-                    }
-                    // Calculate status from available_count
-                    int availableCount = rs.getInt("available_count");
+                    ProductDisplay product = new ProductDisplay();
+                    product.setProductCode(rs.getString("product_code"));
+                    product.setProductName(rs.getString("product_name"));
+                    product.setProviderId(rs.getInt("provider_id"));
+                    product.setProviderName(rs.getString("provider_name"));
+                    product.setProviderType(rs.getString("provider_type"));
+                    product.setPrice(rs.getBigDecimal("price"));
+                    product.setPurchasePrice(rs.getBigDecimal("purchase_price"));
+                    
+                    // Tính available_count từ product_storage
+                    int availableCount = getAvailableStock(productCode, providerId);
+                    product.setAvailableCount(availableCount);
                     product.setStatus(availableCount > 0 ? "ACTIVE" : "INACTIVE");
+                    
                     return product;
                 }
             }
@@ -315,6 +309,32 @@ public class ProductDAO {
             }
         }
         return 0;
+    }
+    
+    /**
+     * Get product_id from product_code and provider_id
+     * Returns the first product_id found in product_storage for the given product_code and provider_id
+     */
+    public int getProductId(String productCode, int providerId) throws SQLException {
+        String sql = """
+            SELECT DISTINCT product_id
+            FROM product_storage
+            WHERE product_code = ? AND provider_id = ? AND is_deleted = 0
+            LIMIT 1
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, productCode);
+            ps.setInt(2, providerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("product_id");
+                }
+            }
+        }
+        return 0; // Return 0 if not found
     }
     
     /**
