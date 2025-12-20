@@ -177,9 +177,10 @@
                     
                     <!-- Search Form -->
                     <div class="search-form">
-                        <form method="GET" action="provider-import">
+                        <form method="GET" action="provider-import" onsubmit="document.getElementById('pageInput').value='1'">
+                            <input type="hidden" name="page" value="1" id="pageInput">
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Chọn nhà cung cấp</label>
                                     <select name="providerName" class="form-select">
                                         <option value="">-- Tất cả nhà cung cấp --</option>
@@ -190,7 +191,15 @@
                                         </c:forEach>
                                     </select>
                                 </div>
-                                <div class="col-md-8 d-flex align-items-end gap-2">
+                                <div class="col-md-2">
+                                    <label class="form-label">Số lượng/trang</label>
+                                    <select name="pageSize" class="form-select" onchange="this.form.submit()">
+                                        <option value="5" ${selectedPageSize == '5' || empty selectedPageSize ? 'selected' : ''}>5</option>
+                                        <option value="10" ${selectedPageSize == '10' ? 'selected' : ''}>10</option>
+                                        <option value="15" ${selectedPageSize == '15' ? 'selected' : ''}>15</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-7 d-flex align-items-end gap-2">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-search"></i> Tìm kiếm
                                     </button>
@@ -267,6 +276,113 @@
                             </table>
                         </c:otherwise>
                     </c:choose>
+                    
+                    <!-- Pagination Info -->
+                    <c:if test="${not empty totalCount && totalCount > 0}">
+                        <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+                            <div class="text-muted">
+                                Hiển thị <strong>${startItem}</strong> - <strong>${endItem}</strong> trong tổng số <strong>${totalCount}</strong> bản ghi
+                            </div>
+                        </div>
+                    </c:if>
+                    
+                    <!-- Pagination -->
+                    <c:if test="${not empty totalPages && totalPages > 1}">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <!-- Previous Button -->
+                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                    <c:url var="prevUrl" value="/provider-import">
+                                        <c:param name="page" value="${currentPage - 1}"/>
+                                        <c:param name="pageSize" value="${pageSize}"/>
+                                        <c:if test="${not empty selectedProviderName}">
+                                            <c:param name="providerName" value="${selectedProviderName}"/>
+                                        </c:if>
+                                    </c:url>
+                                    <a class="page-link" href="${prevUrl}" ${currentPage == 1 ? 'tabindex="-1" aria-disabled="true"' : ''}>
+                                        <i class="bi bi-chevron-left"></i> Trước
+                                    </a>
+                                </li>
+                                
+                                <!-- Page Numbers -->
+                                <c:choose>
+                                    <c:when test="${totalPages <= 7}">
+                                        <c:forEach var="i" begin="1" end="${totalPages}">
+                                            <li class="page-item ${i == currentPage ? 'active' : ''}">
+                                                <c:url var="pageUrl" value="/provider-import">
+                                                    <c:param name="page" value="${i}"/>
+                                                    <c:param name="pageSize" value="${pageSize}"/>
+                                                    <c:if test="${not empty selectedProviderName}">
+                                                        <c:param name="providerName" value="${selectedProviderName}"/>
+                                                    </c:if>
+                                                </c:url>
+                                                <a class="page-link" href="${pageUrl}">${i}</a>
+                                            </li>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:if test="${currentPage > 1}">
+                                            <li class="page-item">
+                                                <c:url var="firstUrl" value="/provider-import">
+                                                    <c:param name="page" value="1"/>
+                                                    <c:param name="pageSize" value="${pageSize}"/>
+                                                    <c:if test="${not empty selectedProviderName}"><c:param name="providerName" value="${selectedProviderName}"/></c:if>
+                                                </c:url>
+                                                <a class="page-link" href="${firstUrl}">1</a>
+                                            </li>
+                                            <c:if test="${currentPage > 3}">
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            </c:if>
+                                        </c:if>
+                                        
+                                        <c:forEach var="i" begin="${currentPage > 2 ? currentPage - 1 : 2}" 
+                                                   end="${currentPage < totalPages - 1 ? currentPage + 1 : totalPages - 1}">
+                                            <li class="page-item ${i == currentPage ? 'active' : ''}">
+                                                <c:url var="pageUrl" value="/provider-import">
+                                                    <c:param name="page" value="${i}"/>
+                                                    <c:param name="pageSize" value="${pageSize}"/>
+                                                    <c:if test="${not empty selectedProviderName}"><c:param name="providerName" value="${selectedProviderName}"/></c:if>
+                                                </c:url>
+                                                <a class="page-link" href="${pageUrl}">${i}</a>
+                                            </li>
+                                        </c:forEach>
+                                        
+                                        <c:if test="${currentPage < totalPages}">
+                                            <c:if test="${currentPage < totalPages - 2}">
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            </c:if>
+                                            <li class="page-item">
+                                                <c:url var="lastUrl" value="/provider-import">
+                                                    <c:param name="page" value="${totalPages}"/>
+                                                    <c:param name="pageSize" value="${pageSize}"/>
+                                                    <c:if test="${not empty selectedProviderName}"><c:param name="providerName" value="${selectedProviderName}"/></c:if>
+                                                </c:url>
+                                                <a class="page-link" href="${lastUrl}">${totalPages}</a>
+                                            </li>
+                                        </c:if>
+                                    </c:otherwise>
+                                </c:choose>
+                                
+                                <!-- Next Button -->
+                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                    <c:url var="nextUrl" value="/provider-import">
+                                        <c:param name="page" value="${currentPage + 1}"/>
+                                        <c:param name="pageSize" value="${pageSize}"/>
+                                        <c:if test="${not empty selectedProviderName}">
+                                            <c:param name="providerName" value="${selectedProviderName}"/>
+                                        </c:if>
+                                    </c:url>
+                                    <a class="page-link" href="${nextUrl}" ${currentPage == totalPages ? 'tabindex="-1" aria-disabled="true"' : ''}>
+                                        Sau <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </c:if>
                 </div>
             </div>
         </div>

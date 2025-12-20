@@ -146,6 +146,7 @@
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
                         <li><a class="dropdown-item" href="order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
                         <li><a class="dropdown-item" href="wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
+                        <li><a class="dropdown-item" href="transaction-history"><i class="bi bi-clock-history me-2"></i>Lịch sử nạp ví</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -204,15 +205,15 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/reports"><i class="bi bi-graph-up me-2"></i>Reports</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users"><i class="bi bi-people me-2"></i>User list</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/plist"><i class="bi bi-box me-2"></i>Product list</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/provider-import"><i class="bi bi-truck me-2"></i>Nhập hàng từ NCC</a></li>
+                                               <li><a class="dropdown-item" href="${pageContext.request.contextPath}/provider-import"><i class="bi bi-truck me-2"></i>Nhập hàng từ NCC</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/pklist"><i class="bi bi-archive me-2"></i>Storage list</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/vlist"><i class="bi bi-ticket-perforated me-2"></i>Voucher list</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/sliderslist"><i class="bi bi-cart me-2"></i>Order list</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/registrationslist"><i class="bi bi-wallet2 me-2"></i>Transactions list</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/transactions"><i class="bi bi-wallet2 me-2"></i>Transactions list</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>

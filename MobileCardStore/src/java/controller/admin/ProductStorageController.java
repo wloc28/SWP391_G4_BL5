@@ -126,11 +126,46 @@ public class ProductStorageController extends HttpServlet {
             String providerName = request.getParameter("providerName");
             String status = request.getParameter("status");
             
+            // Lấy tham số phân trang
+            String pageStr = request.getParameter("page");
+            String pageSizeStr = request.getParameter("pageSize");
+            
+            int page = 1;
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try {
+                    page = Integer.parseInt(pageStr);
+                    if (page < 1) page = 1;
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+            
+            int pageSize = 5; // Mặc định 5 items mỗi trang
+            if (pageSizeStr != null && !pageSizeStr.isEmpty()) {
+                try {
+                    int requestedPageSize = Integer.parseInt(pageSizeStr);
+                    // Chỉ cho phép 5, 10, hoặc 15
+                    if (requestedPageSize == 5 || requestedPageSize == 10 || requestedPageSize == 15) {
+                        pageSize = requestedPageSize;
+                    }
+                } catch (NumberFormatException e) {
+                    pageSize = 5;
+                }
+            }
+            
             // Lấy danh sách provider names để hiển thị trong dropdown
             List<String> providerNames = storageDAO.getAllProviderNames();
             
-            // Lấy danh sách nhóm theo product_code
-            List<ProductStorageGroup> groups = storageDAO.getStorageGroupsByProviderAndStatus(providerName, status);
+            // Đếm tổng số groups
+            int totalCount = storageDAO.countStorageGroups(providerName, status);
+            
+            // Tính tổng số trang
+            int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+            if (totalPages == 0) totalPages = 1;
+            if (page > totalPages) page = totalPages;
+            
+            // Lấy danh sách nhóm theo product_code với phân trang
+            List<ProductStorageGroup> groups = storageDAO.getStorageGroupsByProviderAndStatus(providerName, status, page, pageSize);
             
             // Lấy status từ product_status cho mỗi group
             for (ProductStorageGroup group : groups) {
@@ -148,6 +183,15 @@ public class ProductStorageController extends HttpServlet {
             request.setAttribute("providerNames", providerNames);
             request.setAttribute("selectedProviderName", providerName);
             request.setAttribute("selectedStatus", status);
+            
+            // Pagination attributes
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalCount", totalCount);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("selectedPageSize", pageSizeStr != null ? pageSizeStr : "5");
+            request.setAttribute("startItem", totalCount > 0 ? (page - 1) * pageSize + 1 : 0);
+            request.setAttribute("endItem", Math.min(page * pageSize, totalCount));
             
             request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
         } catch (java.sql.SQLException e) {
