@@ -12,7 +12,7 @@ public class Order {
     private int userId;
     
     // Product information
-    private int productId;
+    private int productCode;
     private String providerName;
     private String productName;
     private BigDecimal unitPrice;
@@ -46,10 +46,10 @@ public class Order {
         this.isDeleted = false;
     }
     
-    public Order(int userId, int productId, int quantity, BigDecimal totalAmount) {
+    public Order(int userId, int productCode, int quantity, BigDecimal totalAmount) {
         this();
         this.userId = userId;
-        this.productId = productId;
+        this.productCode = productCode;
         this.quantity = quantity;
         this.totalAmount = totalAmount;
     }
@@ -71,12 +71,12 @@ public class Order {
         this.userId = userId;
     }
     
-    public int getProductId() {
-        return productId;
+    public int getProductCode() {
+        return productCode;
     }
     
-    public void setProductId(int productId) {
-        this.productId = productId;
+    public void setProductCode(int productCode) {
+        this.productCode = productCode;
     }
     
     public String getProviderName() {
@@ -212,7 +212,7 @@ public class Order {
         return "Order{" +
                 "orderId=" + orderId +
                 ", userId=" + userId +
-                ", productId=" + productId +
+                ", productCode=" + productCode +
                 ", productName='" + productName + '\'' +
                 ", quantity=" + quantity +
                 ", totalAmount=" + totalAmount +

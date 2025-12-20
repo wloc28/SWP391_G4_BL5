@@ -27,7 +27,10 @@ public class OrderDAO {
      */
     public List<Order> getAllOrders() throws SQLException {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT o.*, u.username, u.full_name, u.email " +
+        String sql = "SELECT o.order_id, o.user_id, o.product_code, o.provider_name, o.product_name, " +
+                     "o.unit_price, o.quantity, o.product_log, o.voucher_id, o.voucher_code, " +
+                     "o.discount_amount, o.total_amount, o.status, o.created_at, o.updated_at, o.is_deleted, " +
+                     "u.username, u.full_name, u.email " +
                      "FROM orders o " +
                      "LEFT JOIN users u ON o.user_id = u.user_id " +
                      "WHERE o.is_deleted = 0 " +
@@ -55,7 +58,10 @@ public class OrderDAO {
                                          String sortBy, String sortDir) throws SQLException {
         List<Order> orders = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT o.*, u.username, u.full_name, u.email ")
+        sql.append("SELECT o.order_id, o.user_id, o.product_code, o.provider_name, o.product_name, ")
+           .append("o.unit_price, o.quantity, o.product_log, o.voucher_id, o.voucher_code, ")
+           .append("o.discount_amount, o.total_amount, o.status, o.created_at, o.updated_at, o.is_deleted, ")
+           .append("u.username, u.full_name, u.email ")
            .append("FROM orders o ")
            .append("LEFT JOIN users u ON o.user_id = u.user_id ")
            .append("WHERE o.is_deleted = 0 ");
@@ -316,7 +322,10 @@ public class OrderDAO {
      * Lấy đơn hàng theo ID
      */
     public Order getOrderById(int orderId) throws SQLException {
-        String sql = "SELECT o.*, u.username, u.full_name, u.email, u.phone_number " +
+        String sql = "SELECT o.order_id, o.user_id, o.product_code, o.provider_name, o.product_name, " +
+                     "o.unit_price, o.quantity, o.product_log, o.voucher_id, o.voucher_code, " +
+                     "o.discount_amount, o.total_amount, o.status, o.created_at, o.updated_at, o.is_deleted, " +
+                     "u.username, u.full_name, u.email, u.phone_number " +
                      "FROM orders o " +
                      "LEFT JOIN users u ON o.user_id = u.user_id " +
                      "WHERE o.order_id = ? AND o.is_deleted = 0";
@@ -341,7 +350,10 @@ public class OrderDAO {
      */
     public List<Order> getOrderHistoryByUserId(int userId) throws SQLException {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT o.*, u.username, u.full_name, u.email " +
+        String sql = "SELECT o.order_id, o.user_id, o.product_code, o.provider_name, o.product_name, " +
+                     "o.unit_price, o.quantity, o.product_log, o.voucher_id, o.voucher_code, " +
+                     "o.discount_amount, o.total_amount, o.status, o.created_at, o.updated_at, o.is_deleted, " +
+                     "u.username, u.full_name, u.email " +
                      "FROM orders o " +
                      "LEFT JOIN users u ON o.user_id = u.user_id " +
                      "WHERE o.user_id = ? AND o.is_deleted = 0 " +
@@ -422,7 +434,10 @@ public class OrderDAO {
      */
     public List<Order> getRecentOrders(int limit) throws SQLException {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT o.*, u.username, u.full_name, u.email " +
+        String sql = "SELECT o.order_id, o.user_id, o.product_code, o.provider_name, o.product_name, " +
+                     "o.unit_price, o.quantity, o.product_log, o.voucher_id, o.voucher_code, " +
+                     "o.discount_amount, o.total_amount, o.status, o.created_at, o.updated_at, o.is_deleted, " +
+                     "u.username, u.full_name, u.email " +
                      "FROM orders o " +
                      "LEFT JOIN users u ON o.user_id = u.user_id " +
                      "WHERE o.is_deleted = 0 " +
@@ -466,10 +481,11 @@ public class OrderDAO {
     /**
      * Tạo đơn hàng mới từ thông tin sản phẩm
      */
-    public int createOrder(int userId, int productId, String providerName, String productName,
+    public int createOrder(int userId, String productCode, String providerName, String productName,
                            BigDecimal unitPrice, int quantity, Integer voucherId, String voucherCode,
                            BigDecimal discountAmount, BigDecimal totalAmount, int createdBy) throws SQLException {
-        String sql = "INSERT INTO orders (user_id, product_id, provider_name, product_name, " +
+        // Sử dụng product_code thay vì product_id
+        String sql = "INSERT INTO orders (user_id, product_code, provider_name, product_name, " +
                      "unit_price, quantity, voucher_id, voucher_code, discount_amount, total_amount, " +
                      "status, created_at, updated_at, is_deleted, created_by) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', NOW(), NOW(), 0, ?)";
@@ -478,7 +494,7 @@ public class OrderDAO {
              PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             
             ps.setInt(1, userId);
-            ps.setInt(2, productId);
+            ps.setString(2, productCode);
             ps.setString(3, providerName);
             ps.setString(4, productName);
             ps.setBigDecimal(5, unitPrice);
@@ -511,13 +527,55 @@ public class OrderDAO {
     }
     
     /**
+     * Cập nhật product_log với serial_number và card_code cho đơn hàng
+     */
+    public boolean updateOrderProductLog(int orderId, String productLog) throws SQLException {
+        String sql = "UPDATE orders SET product_log = ?, updated_at = NOW() WHERE order_id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, productLog);
+            ps.setInt(2, orderId);
+            
+            return ps.executeUpdate() > 0;
+        }
+    }
+    
+    /**
+     * Cập nhật trạng thái đơn hàng thành COMPLETED
+     */
+    public boolean completeOrder(int orderId) throws SQLException {
+        String sql = "UPDATE orders SET status = 'COMPLETED', updated_at = NOW() WHERE order_id = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, orderId);
+            
+            return ps.executeUpdate() > 0;
+        }
+    }
+    
+    /**
      * Map ResultSet to Order object
      */
     private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
         Order order = new Order();
         order.setOrderId(rs.getInt("order_id"));
         order.setUserId(rs.getInt("user_id"));
-        order.setProductId(rs.getInt("product_id"));
+        // Sử dụng product_code thay vì product_id
+        String productCodeStr = rs.getString("product_code");
+        if (productCodeStr != null && !productCodeStr.isEmpty()) {
+            try {
+                order.setProductCode(Integer.parseInt(productCodeStr));
+            } catch (NumberFormatException e) {
+                // Nếu product_code không phải số, set 0
+                order.setProductCode(0);
+            }
+        } else {
+            order.setProductCode(0);
+        }
         order.setProviderName(rs.getString("provider_name"));
         order.setProductName(rs.getString("product_name"));
         order.setUnitPrice(rs.getBigDecimal("unit_price"));

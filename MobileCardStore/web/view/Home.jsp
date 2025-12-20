@@ -174,46 +174,8 @@
         </div>
     </c:if>
 
-    <!-- Quick Navigation:  Provider Cards -->
-    <section class="mb-5">
-        <h2 class="section-title">Nhà Cung Cấp</h2>
-        <div class="row g-3">
-            <c:forEach var="provider" items="${providers}">
-                <div class="col-6 col-md-4 col-lg-2">
-                    <a href="products?providerId=${provider.providerId}" class="text-decoration-none">
-                        <div class="card provider-card h-100">
-                            <div class="card-body">
-                                <c:choose>
-                                    <c:when test="${not empty provider.imageUrl}">
-                                        <img src="${provider.imageUrl}" alt="${provider.providerName}" class="provider-icon">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div class="provider-icon-placeholder">
-                                            <c:choose>
-                                                <c:when test="${provider.providerType == 'TEL'}">
-                                                    <i class="bi bi-phone" style="font-size: 2rem;"></i>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <i class="bi bi-controller" style="font-size: 2rem;"></i>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                    </c:otherwise>
-                                </c:choose>
-                                <h6 class="card-title mb-1 text-dark">${provider.providerName}</h6>
-                                <small class="text-muted">
-                                    <c:choose>
-                                        <c:when test="${provider.providerType == 'TEL'}">Điện thoại</c:when>
-                                        <c:otherwise>Game</c:otherwise>
-                                    </c:choose>
-                                </small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </c:forEach>
-        </div>
-    </section>
+
+    
 
     <!-- Products Grouped by Provider -->
     <section>
@@ -268,11 +230,12 @@
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="card product-card ${product.availableCount == 0 ? 'out-of-stock' : ''}">
                             <c:choose>
-                            <c:when test="${not empty product.imageUrl}">
-                                <img src="${product.imageUrl}" class="card-img-top" alt="${product.productName}">
+                            <c:when test="${not empty product.providerImageUrl}">
+                                <img src="${product.providerImageUrl}" class="card-img-top" alt="${product.productName}" 
+                                     style="height: 200px; object-fit: contain; padding: 10px;">
                             </c:when>
                             <c:otherwise>
-                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light">
+                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
                                     <c:choose>
                                         <c:when test="${product.providerType == 'TEL'}">
                                             <i class="bi bi-credit-card-2-front" style="font-size: 3rem; color: #6c757d;"></i>
@@ -305,10 +268,9 @@
                                 </div>
                                 <c:choose>
                                     <c:when test="${product.availableCount == 0}">
-                                        <a href="product-detail?id=${product.productId}"
-                                           class="btn btn-dark btn-sm w-100 mt-auto disabled">
+                                        <button class="btn btn-secondary btn-sm w-100 mt-auto" disabled>
                                             Hết hàng
-                                        </a>
+                                        </button>
                                     </c:when>
                                     <c:when test="${sessionScope.info == null and sessionScope.user == null}">
                                         <a href="${pageContext.request.contextPath}/view/login.jsp"
@@ -317,12 +279,22 @@
                                         </a>
                                     </c:when>
                                     <c:otherwise>
-                                <a href="product-detail?id=${product.productId}"
-                                           class="btn btn-dark btn-sm w-100 mt-auto">
-                                            Mua ngay
-                                        </a>
+                                        <div class="d-flex gap-1 mt-auto">
+                                            <a href="product-detail?code=${product.productCode}&providerId=${product.providerId}"
+                                               class="btn btn-outline-primary btn-sm flex-fill">
+                                                <i class="bi bi-eye"></i> Chi tiết
+                                            </a>
+                                            <button onclick="addToCart('${product.productCode}', ${product.providerId}, 1)"
+                                                    class="btn btn-outline-success btn-sm flex-fill">
+                                                <i class="bi bi-cart-plus"></i> Thêm
+                                            </button>
+                                            <button onclick="buyNow('${product.productCode}', ${product.providerId})"
+                                                    class="btn btn-dark btn-sm flex-fill">
+                                                <i class="bi bi-bag-check"></i> Mua ngay
+                                            </button>
+                                        </div>
                                     </c:otherwise>
-                                    </c:choose>
+                                </c:choose>
                             </div>
                         </div>
                     </div>
@@ -337,5 +309,154 @@
 </div>
 
 <%@include file="../components/footer.jsp" %>
+
+<script>
+    <c:set var="isLoggedIn" value="${sessionScope.info != null or sessionScope.user != null}" />
+    <c:set var="contextPath" value="${pageContext.request.contextPath}" />
+    
+    function addToCart(productCode, providerId, quantity) {
+        <c:if test="${!isLoggedIn}">
+            alert('Vui lòng đăng nhập để mua hàng!');
+            window.location.href = '${contextPath}/view/login.jsp';
+            return;
+        </c:if>
+        
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        
+        // Disable button and show loading
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        
+        // Thêm vào giỏ hàng
+        fetch('${contextPath}/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'productCode=' + encodeURIComponent(productCode) + 
+                  '&providerId=' + providerId + 
+                  '&quantity=' + (quantity || 1)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Có lỗi xảy ra');
+                });
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Hiển thị thành công
+                button.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                button.classList.add('btn-success');
+                button.classList.remove('btn-outline-success');
+                
+                // Trigger cart update event để cập nhật badge
+                const cartUpdatedEvent = new Event('cartUpdated');
+                document.dispatchEvent(cartUpdatedEvent);
+                
+                // Cập nhật badge giỏ hàng
+                updateCartBadge();
+                
+                // Khôi phục button sau 2 giây
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-success');
+                    button.disabled = false;
+                }, 2000);
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+    
+    // Hàm cập nhật badge giỏ hàng
+    function updateCartBadge() {
+        <c:if test="${isLoggedIn}">
+        // Cập nhật badge bằng cách reload trang hoặc fetch số lượng
+        // Đơn giản nhất là reload trang để cập nhật badge
+        // Hoặc có thể fetch số lượng từ API nếu có
+        const badge = document.getElementById('cartBadge');
+        if (badge) {
+            // Trigger animation
+            badge.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                badge.style.animation = '';
+                // Reload để cập nhật số lượng chính xác
+                window.location.reload();
+            }, 500);
+        } else {
+            // Nếu chưa có badge, reload để hiển thị
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        }
+        </c:if>
+    }
+    
+    function buyNow(productCode, providerId) {
+        <c:if test="${!isLoggedIn}">
+            alert('Vui lòng đăng nhập để mua hàng!');
+            window.location.href = '${contextPath}/view/login.jsp';
+            return;
+        </c:if>
+        
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        
+        // Disable button and show loading
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> ...';
+        
+        // Thêm vào giỏ hàng trước
+        fetch('${contextPath}/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'productCode=' + encodeURIComponent(productCode) + 
+                  '&providerId=' + providerId + 
+                  '&quantity=1'
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.text().then(text => {
+                    throw new Error(text || 'Có lỗi xảy ra');
+                });
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Thêm thành công, chuyển đến trang giỏ hàng
+                window.location.href = '${contextPath}/cart/view';
+            } else {
+                alert(data.message || 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng: ' + error.message);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+    }
+</script>
+
 </body>
 </html>

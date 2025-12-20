@@ -1,8 +1,8 @@
 package controller.admin;
 
-import DAO.admin.ProductDAO;
 import DAO.admin.ProductStorageDAO;
 import Models.ProductStorage;
+import Models.ProductStorageGroup;
 import Models.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Date;
+import java.sql.SQLException;
+import java.util.List;
 
 
 
@@ -19,12 +21,10 @@ import java.sql.Date;
 public class ProductStorageController extends HttpServlet {
     
     private ProductStorageDAO storageDAO;
-    private ProductDAO productDAO;
     
     @Override
     public void init() throws ServletException {
         storageDAO = new ProductStorageDAO();
-        productDAO = new ProductDAO();
     }
     
     @Override
@@ -39,44 +39,35 @@ public class ProductStorageController extends HttpServlet {
         String action = request.getParameter("action");
         
         try {
-            if (action == null || action.isEmpty() || action.equals("list")) {
-                // List all storage items
-                listStorageItems(request, response);
-            } else if (action.equals("add")) {
-                // Show add form
-                showAddForm(request, response);
-            } else if (action.equals("edit")) {
-                // Show edit form
-                String idParam = request.getParameter("id");
-                if (idParam == null || idParam.isEmpty()) {
-                    response.sendRedirect(request.getContextPath() + "/pklist?error=invalid_id");
-                    return;
-                }
-                showEditForm(request, response, Integer.parseInt(idParam));
-            } else if (action.equals("delete")) {
-                // Delete storage item
-                String idParam = request.getParameter("id");
-                if (idParam == null || idParam.isEmpty()) {
-                    response.sendRedirect(request.getContextPath() + "/pklist?error=invalid_id");
-                    return;
-                }
-                deleteStorageItem(request, response, Integer.parseInt(idParam));
+            if ("details".equals(action)) {
+                // Lấy chi tiết thẻ theo product_code (cho popup)
+                getCardDetails(request, response);
             } else {
-                listStorageItems(request, response);
+                // List all storage groups (grouped by product_code)
+                listStorageGroups(request, response);
             }
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/pklist?error=invalid_id");
+            request.setAttribute("error", "ID không hợp lệ");
+            try {
+                listStorageGroups(request, response);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=server_error");
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            try {
+                listStorageGroups(request, response);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        // Ki?m tra quy?n admin
+        // Kiểm tra quyền admin
         if (!checkAdminPermission(request, response)) {
             return;
         }
@@ -84,16 +75,19 @@ public class ProductStorageController extends HttpServlet {
         String action = request.getParameter("action");
         
         try {
-            if ("add".equals(action)) {
-                addStorageItem(request, response);
-            } else if ("edit".equals(action)) {
-                updateStorageItem(request, response);
+            if ("updateStatus".equals(action)) {
+                updateProductStatus(request, response);
             } else {
-                listStorageItems(request, response);
+                doGet(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=server_error");
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            try {
+                listStorageGroups(request, response);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
     
@@ -122,157 +116,159 @@ public class ProductStorageController extends HttpServlet {
         return true;
     }
     
-    private void listStorageItems(HttpServletRequest request, HttpServletResponse response)
+    /**
+     * Hiển thị danh sách nhóm theo product_code
+     */
+    private void listStorageGroups(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy các tham số tìm kiếm
-            String searchKeyword = request.getParameter("searchKeyword");
+            // Lấy các tham số lọc
+            String providerName = request.getParameter("providerName");
             String status = request.getParameter("status");
             
-            // Lấy tham số phân trang
-            int page = 1;
-            int itemsPerPage = 3; // Số items mỗi trang
+            // Lấy danh sách provider names để hiển thị trong dropdown
+            List<String> providerNames = storageDAO.getAllProviderNames();
             
-            String pageParam = request.getParameter("page");
-            if (pageParam != null && !pageParam.isEmpty()) {
+            // Lấy danh sách nhóm theo product_code
+            List<ProductStorageGroup> groups = storageDAO.getStorageGroupsByProviderAndStatus(providerName, status);
+            
+            // Lấy status từ product_status cho mỗi group
+            for (ProductStorageGroup group : groups) {
                 try {
-                    page = Integer.parseInt(pageParam);
-                    if (page < 1) page = 1;
-                } catch (NumberFormatException e) {
-                    page = 1;
+                    String productStatus = storageDAO.getProductStatus(group.getProductCode(), group.getProviderId());
+                    group.setProductStatus(productStatus);
+                } catch (Exception e) {
+                    // Nếu không lấy được, set default
+                    group.setProductStatus(group.getAvailableQuantity() > 0 ? "ACTIVE" : "INACTIVE");
                 }
             }
             
-            // Tính offset
-            int offset = (page - 1) * itemsPerPage;
-            
-            // Đếm tổng số items
-            int totalItems = storageDAO.countStorageItems(searchKeyword, status);
-            
-            // Tính tổng số trang
-            int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
-            if (totalPages < 1) totalPages = 1;
-            
-            // Lấy danh sách items theo trang
-            request.setAttribute("storageItems", 
-                storageDAO.searchStorageItemsWithPagination(searchKeyword, status, offset, itemsPerPage));
-            
-            // Set các attributes cho pagination
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("totalItems", totalItems);
-            request.setAttribute("itemsPerPage", itemsPerPage);
-            
-            // Set các attributes cho search
-            request.setAttribute("searchKeyword", searchKeyword);
+            // Set attributes
+            request.setAttribute("storageGroups", groups);
+            request.setAttribute("providerNames", providerNames);
+            request.setAttribute("selectedProviderName", providerName);
             request.setAttribute("selectedStatus", status);
             
-            request.setAttribute("products", productDAO.getAllProducts());
             request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi kết nối database: " + e.getMessage());
+            request.setAttribute("storageGroups", new java.util.ArrayList<>());
+            request.setAttribute("providerNames", new java.util.ArrayList<>());
+            try {
+                request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=load_failed");
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            request.setAttribute("storageGroups", new java.util.ArrayList<>());
+            request.setAttribute("providerNames", new java.util.ArrayList<>());
+            try {
+                request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
     
-    private void showAddForm(HttpServletRequest request, HttpServletResponse response)
+    /**
+     * Lấy chi tiết các thẻ theo product_code (cho popup)
+     */
+    private void getCardDetails(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            request.setAttribute("products", productDAO.getAllProducts());
-            request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=load_failed");
-        }
-    }
-    
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response, int storageId)
-            throws ServletException, IOException {
-        try {
-            ProductStorage item = storageDAO.getStorageItemById(storageId);
-            if (item == null) {
-                response.sendRedirect(request.getContextPath() + "/pklist?error=item_not_found");
-                return;
-            }
-            request.setAttribute("storageItem", item);
-            request.setAttribute("products", productDAO.getAllProducts());
-            request.getRequestDispatcher("/view/ManageStorage.jsp").forward(request, response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=load_failed");
-        }
-    }
-    
-    private void addStorageItem(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            ProductStorage item = new ProductStorage();
-            item.setProductId(Integer.parseInt(request.getParameter("productId")));
-            item.setSerialNumber(request.getParameter("serialNumber"));
-            item.setCardCode(request.getParameter("cardCode"));
-            item.setStatus(request.getParameter("status"));
+            String productCode = request.getParameter("productCode");
             
-            String expiryDateStr = request.getParameter("expiryDate");
-            if (expiryDateStr != null && !expiryDateStr.isEmpty()) {
-                item.setExpiryDate(Date.valueOf(expiryDateStr));
-            }
-            
-            if (storageDAO.addStorageItem(item)) {
-                response.sendRedirect(request.getContextPath() + "/pklist?success=add_success");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/pklist?error=add_failed");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=add_failed");
-        }
-    }
-    
-    private void updateStorageItem(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
-            int storageId = Integer.parseInt(request.getParameter("storageId"));
-            ProductStorage item = storageDAO.getStorageItemById(storageId);
-            
-            if (item == null) {
-                response.sendRedirect(request.getContextPath() + "/pklist?error=item_not_found");
+            if (productCode == null || productCode.trim().isEmpty()) {
+                response.getWriter().write("{\"error\": \"Mã sản phẩm không hợp lệ\"}");
+                response.setContentType("application/json");
                 return;
             }
             
-            item.setProductId(Integer.parseInt(request.getParameter("productId")));
-            item.setSerialNumber(request.getParameter("serialNumber"));
-            item.setCardCode(request.getParameter("cardCode"));
-            item.setStatus(request.getParameter("status"));
+            // Lấy danh sách thẻ theo product_code
+            List<ProductStorage> cards = storageDAO.getStorageItemsByProductCode(productCode);
             
-            String expiryDateStr = request.getParameter("expiryDate");
-            if (expiryDateStr != null && !expiryDateStr.isEmpty()) {
-                item.setExpiryDate(Date.valueOf(expiryDateStr));
-            } else {
-                item.setExpiryDate(null);
+            // Convert to JSON
+            StringBuilder json = new StringBuilder();
+            json.append("[");
+            for (int i = 0; i < cards.size(); i++) {
+                ProductStorage card = cards.get(i);
+                if (i > 0) json.append(",");
+                json.append("{");
+                json.append("\"storageId\":").append(card.getStorageId()).append(",");
+                json.append("\"serialNumber\":\"").append(escapeJson(card.getSerialNumber())).append("\",");
+                json.append("\"cardCode\":\"").append(escapeJson(card.getCardCode())).append("\",");
+                json.append("\"status\":\"").append(escapeJson(card.getStatus())).append("\",");
+                json.append("\"expiryDate\":").append(card.getExpiryDate() != null ? "\"" + card.getExpiryDate() + "\"" : "null").append(",");
+                json.append("\"createdAt\":\"").append(card.getCreatedAt() != null ? card.getCreatedAt().toString() : "").append("\"");
+                json.append("}");
             }
+            json.append("]");
             
-            if (storageDAO.updateStorageItem(item)) {
-                response.sendRedirect(request.getContextPath() + "/pklist?success=update_success");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/pklist?error=update_failed");
-            }
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(json.toString());
+            
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=update_failed");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"" + escapeJson(e.getMessage()) + "\"}");
         }
     }
     
-    private void deleteStorageItem(HttpServletRequest request, HttpServletResponse response, int storageId)
-            throws IOException {
+    /**
+     * Cập nhật status của sản phẩm
+     */
+    private void updateProductStatus(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         try {
-            if (storageDAO.deleteStorageItem(storageId)) {
-                response.sendRedirect(request.getContextPath() + "/pklist?success=delete_success");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/pklist?error=delete_failed");
+            String productCode = request.getParameter("productCode");
+            String providerIdStr = request.getParameter("providerId");
+            String status = request.getParameter("status");
+            
+            if (productCode == null || providerIdStr == null || status == null) {
+                response.getWriter().write("{\"success\": false, \"error\": \"Thiếu thông tin\"}");
+                response.setContentType("application/json");
+                return;
             }
+            
+            int providerId = Integer.parseInt(providerIdStr);
+            
+            // Lấy user ID từ session
+            HttpSession session = request.getSession();
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                user = (User) session.getAttribute("info");
+            }
+            Integer updatedBy = (user != null) ? user.getUserId() : null;
+            
+            // Update status
+            boolean success = storageDAO.updateProductStatus(productCode, providerId, status, updatedBy);
+            
+            if (success) {
+                response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật trạng thái thành công\"}");
+            } else {
+                response.getWriter().write("{\"success\": false, \"error\": \"Không thể cập nhật trạng thái\"}");
+            }
+            
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/pklist?error=delete_failed");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}");
         }
+    }
+    
+    private String escapeJson(String str) {
+        if (str == null) return "";
+        return str.replace("\\", "\\\\")
+                  .replace("\"", "\\\"")
+                  .replace("\n", "\\n")
+                  .replace("\r", "\\r")
+                  .replace("\t", "\\t");
     }
 }

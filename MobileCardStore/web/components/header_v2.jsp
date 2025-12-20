@@ -72,6 +72,44 @@
                             </c:choose>
                         </strong>
                     </span>
+                
+                <!-- Cart Button with Badge -->
+                <%
+                    try {
+                        Models.User currentUser = (Models.User)session.getAttribute("info");
+                        if (currentUser == null) {
+                            currentUser = (Models.User)session.getAttribute("user");
+                        }
+                        
+                        int cartItemCount = 0;
+                        if (currentUser != null) {
+                            DAO.user.CartDAO cartDAO = new DAO.user.CartDAO();
+                            cartItemCount = cartDAO.getCartItemCountByUserId(currentUser.getUserId());
+                        }
+                        pageContext.setAttribute("cartItemCount", cartItemCount);
+                    } catch (Exception e) {
+                        pageContext.setAttribute("cartItemCount", 0);
+                    }
+                %>
+                
+                <!-- Cart Icon -->
+                <a href="${pageContext.request.contextPath}/cart/view" class="btn btn-outline-light position-relative me-3" 
+                   style="text-decoration: none; padding: 0.375rem 0.75rem;" 
+                   title="Giỏ hàng">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart3" viewBox="0 0 16 16">
+                        <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401h-11.493l-.277 1.827A.5.5 0 0 1 2 12H.5a.5.5 0 0 1-.5-.5zm.82 1.641L1.91 4H14.5l.5-2H2.82zM3.5 5a.5.5 0 0 1 .5.5h9a.5.5 0 0 1 .5.5l-1 5a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5L3.5 5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                    </svg>
+                    <c:if test="${cartItemCount > 0}">
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                              id="cartBadge" 
+                              style="font-size: 0.7rem; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; padding: 0 4px;">
+                            <c:choose>
+                                <c:when test="${cartItemCount > 99}">99+</c:when>
+                                <c:otherwise>${cartItemCount}</c:otherwise>
+                            </c:choose>
+                        </span>
+                    </c:if>
+                </a>
 
                 <!-- User Dropdown -->
                 <div class="dropdown">
@@ -106,8 +144,8 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
+                        <li><a class="dropdown-item" href="order-history"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
+                        <li><a class="dropdown-item" href="wallet"><i class="bi bi-wallet2 me-2"></i>Nạp tiền</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -166,9 +204,15 @@
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/viewProfile"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-                        <c:if test="${sessionScope.info != null and sessionScope.info.userId != null}">
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders/history/${sessionScope.info.userId}"><i class="bi bi-clock-history me-2"></i>Lịch sử đơn hàng</a></li>
-                        </c:if>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users"><i class="bi bi-people me-2"></i>User list</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/plist"><i class="bi bi-box me-2"></i>Product list</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/provider-import"><i class="bi bi-truck me-2"></i>Nhập hàng từ NCC</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/pklist"><i class="bi bi-archive me-2"></i>Storage list</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/vlist"><i class="bi bi-ticket-perforated me-2"></i>Voucher list</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/sliderslist"><i class="bi bi-cart me-2"></i>Order list</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/registrationslist"><i class="bi bi-wallet2 me-2"></i>Transactions list</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -180,3 +224,50 @@
             </div>
             </header>
         </c:if>
+
+<script>
+// Function to update cart badge count via AJAX
+function updateCartBadge() {
+    <c:if test="${sessionScope.info != null or sessionScope.user != null}">
+    // Simple approach: reload the page to get updated cart count
+    // Or use AJAX to fetch cart count
+    const badge = document.getElementById('cartBadge');
+    if (badge) {
+        // Add pulse animation when cart is updated
+        badge.style.animation = 'pulse 0.5s ease-in-out';
+        setTimeout(() => {
+            badge.style.animation = '';
+        }, 500);
+    }
+    </c:if>
+}
+
+// Add pulse animation to badge when page loads if cart has items
+document.addEventListener('DOMContentLoaded', function() {
+    const badge = document.getElementById('cartBadge');
+    if (badge && badge.textContent.trim() !== '' && parseInt(badge.textContent) > 0) {
+        // Badge is visible, no need to animate on load
+    }
+});
+
+// Listen for custom event to update cart badge (triggered when item is added)
+document.addEventListener('cartUpdated', function() {
+    updateCartBadge();
+    // Optionally reload page to get accurate count
+    // window.location.reload();
+});
+</script>
+
+<style>
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Cart icon hover effect */
+a[href*="/cart/view"]:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transition: background-color 0.2s ease;
+}
+</style>

@@ -1,7 +1,7 @@
 package controller.user;
 
 import DAO.user.ProductDAO;
-import Models.Product;
+import Models.ProductDisplay;
 import Models.Provider;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -118,7 +118,7 @@ public class ProductServlet extends HttpServlet {
             int pageSize = 12;
 
             // Get products with filters
-            List<Product> products = productDAO.searchAndFilterProducts(
+            List<ProductDisplay> products = productDAO.searchAndFilterProducts(
                     searchKeyword, providerId, providerType, minPrice, maxPrice,
                     sortBy, sortOrder, page, pageSize);
 
@@ -136,13 +136,9 @@ public class ProductServlet extends HttpServlet {
             // Get all providers for filter dropdown
             List<Provider> providers = productDAO.getAllProviders();
 
-            // Get available stock for each product
-            for (Product product : products) {
-                int stock = productDAO.getAvailableStock(product.getProductId());
-                // You can add a stock field to Product model or use a Map
-                // For now, we'll pass it separately if needed
-            }
-
+            // Debug logging
+            System.out.println("ProductServlet: Found " + products.size() + " products, total: " + totalCount);
+            
             // Set request attributes
             request.setAttribute("products", products);
             request.setAttribute("providers", providers);
@@ -162,8 +158,20 @@ public class ProductServlet extends HttpServlet {
             request.getRequestDispatcher("/view/ViewProducts.jsp").forward(request, response);
 
         } catch (SQLException e) {
+            System.err.println("ProductServlet SQL Error: " + e.getMessage());
             e.printStackTrace();
             request.setAttribute("error", "Lỗi khi tải danh sách sản phẩm: " + e.getMessage());
+            request.setAttribute("products", new java.util.ArrayList<>());
+            request.setAttribute("totalCount", 0);
+            request.setAttribute("totalPages", 1);
+            request.getRequestDispatcher("/view/ViewProducts.jsp").forward(request, response);
+        } catch (Exception e) {
+            System.err.println("ProductServlet General Error: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            request.setAttribute("products", new java.util.ArrayList<>());
+            request.setAttribute("totalCount", 0);
+            request.setAttribute("totalPages", 1);
             request.getRequestDispatcher("/view/ViewProducts.jsp").forward(request, response);
         }
     }
@@ -174,24 +182,25 @@ public class ProductServlet extends HttpServlet {
     private void handleProductDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            String productIdStr = request.getParameter("id");
+            String productCode = request.getParameter("code");
+            String providerIdStr = request.getParameter("providerId");
 
-            if (productIdStr == null || productIdStr.isEmpty()) {
-                request.setAttribute("error", "Không tìm thấy sản phẩm");
+            if (productCode == null || productCode.isEmpty() || providerIdStr == null || providerIdStr.isEmpty()) {
+                request.setAttribute("error", "Thông tin sản phẩm không hợp lệ");
                 request.getRequestDispatcher("/view/ProductDetail.jsp").forward(request, response);
                 return;
             }
 
-            int productId;
+            int providerId;
             try {
-                productId = Integer.parseInt(productIdStr);
+                providerId = Integer.parseInt(providerIdStr);
             } catch (NumberFormatException e) {
-                request.setAttribute("error", "ID sản phẩm không hợp lệ");
+                request.setAttribute("error", "ID nhà cung cấp không hợp lệ");
                 request.getRequestDispatcher("/view/ProductDetail.jsp").forward(request, response);
                 return;
             }
 
-            Product product = productDAO.getProductById(productId);
+            ProductDisplay product = productDAO.getProductByCode(productCode, providerId);
 
             if (product == null) {
                 request.setAttribute("error", "Không tìm thấy sản phẩm");
@@ -200,12 +209,12 @@ public class ProductServlet extends HttpServlet {
             }
 
             // Get available stock
-            int stock = productDAO.getAvailableStock(productId);
+            int stock = productDAO.getAvailableStock(productCode, providerId);
             request.setAttribute("product", product);
             request.setAttribute("stock", stock);
 
             // Get related products (same provider, max 8 products)
-            List<Product> relatedProducts = productDAO.getRelatedProducts(productId, product.getProviderId(), 8);
+            List<ProductDisplay> relatedProducts = productDAO.getRelatedProducts(productCode, providerId, product.getProviderId(), 8);
             request.setAttribute("relatedProducts", relatedProducts);
 
             // Forward to JSP

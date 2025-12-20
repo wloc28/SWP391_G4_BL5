@@ -208,11 +208,13 @@ public class AdminDashboardDAO {
      */
     public List<Order> getRecentOrders(int limit) throws SQLException {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT o.*, u.username, u.full_name, p.product_name, pv.provider_name " +
+        // Sử dụng product_code thay vì product_id
+        String sql = "SELECT o.order_id, o.user_id, o.product_code, o.provider_name, o.product_name, " +
+                     "o.unit_price, o.quantity, o.product_log, o.voucher_id, o.voucher_code, " +
+                     "o.discount_amount, o.total_amount, o.status, o.created_at, o.updated_at, o.is_deleted, " +
+                     "u.username, u.full_name " +
                      "FROM orders o " +
                      "LEFT JOIN users u ON o.user_id = u.user_id " +
-                     "LEFT JOIN products p ON o.product_id = p.product_id " +
-                     "LEFT JOIN providers pv ON p.provider_id = pv.provider_id " +
                      "WHERE o.is_deleted = 0 " +
                      "ORDER BY o.created_at DESC LIMIT ?";
         
@@ -226,7 +228,17 @@ public class AdminDashboardDAO {
                     Order order = new Order();
                     order.setOrderId(rs.getInt("order_id"));
                     order.setUserId(rs.getInt("user_id"));
-                    order.setProductId(rs.getInt("product_id"));
+                    // Sử dụng product_code
+                    String productCodeStr = rs.getString("product_code");
+                    if (productCodeStr != null && !productCodeStr.isEmpty()) {
+                        try {
+                            order.setProductCode(Integer.parseInt(productCodeStr));
+                        } catch (NumberFormatException e) {
+                            order.setProductCode(productCodeStr.hashCode());
+                        }
+                    } else {
+                        order.setProductCode(0);
+                    }
                     order.setProductName(rs.getString("product_name"));
                     order.setProviderName(rs.getString("provider_name"));
                     order.setQuantity(rs.getInt("quantity"));
@@ -236,6 +248,7 @@ public class AdminDashboardDAO {
                     order.setCreatedAt(rs.getTimestamp("created_at"));
                     order.setUpdatedAt(rs.getTimestamp("updated_at"));
                     order.setDeleted(rs.getBoolean("is_deleted"));
+                    order.setProductLog(rs.getString("product_log"));
                     
                     // Set voucher info if available
                     if (rs.getObject("voucher_id") != null) {
