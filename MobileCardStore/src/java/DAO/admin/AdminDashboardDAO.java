@@ -38,9 +38,14 @@ public class AdminDashboardDAO {
     
     /**
      * Lấy tổng số sản phẩm (không bị xóa)
+     * Đếm số nhóm sản phẩm duy nhất từ product_storage
      */
     public int getTotalProducts() throws SQLException {
-        String sql = "SELECT COUNT(*) as total FROM products WHERE is_deleted = 0";
+        String sql = """
+            SELECT COUNT(DISTINCT CONCAT(product_code, '_', provider_id)) as total 
+            FROM product_storage 
+            WHERE is_deleted = 0 AND status = 'AVAILABLE'
+            """;
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -263,6 +268,222 @@ public class AdminDashboardDAO {
         }
         
         return orders;
+    }
+    
+    /**
+     * Lấy doanh thu theo tháng (N tháng gần nhất)
+     */
+    public Map<String, BigDecimal> getRevenueByMonth(int months) throws SQLException {
+        Map<String, BigDecimal> revenueMap = new HashMap<>();
+        String sql = """
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month,
+                COALESCE(SUM(total_amount), 0) as revenue
+            FROM orders
+            WHERE status = 'COMPLETED' AND is_deleted = 0
+            AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month DESC
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, months);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String month = rs.getString("month");
+                    BigDecimal revenue = rs.getBigDecimal("revenue");
+                    revenueMap.put(month, revenue);
+                }
+            }
+        }
+        
+        return revenueMap;
+    }
+    
+    /**
+     * Lấy doanh thu theo ngày (N ngày gần nhất)
+     */
+    public Map<String, BigDecimal> getRevenueByDay(int days) throws SQLException {
+        Map<String, BigDecimal> revenueMap = new HashMap<>();
+        String sql = """
+            SELECT 
+                DATE(created_at) as day,
+                COALESCE(SUM(total_amount), 0) as revenue
+            FROM orders
+            WHERE status = 'COMPLETED' AND is_deleted = 0
+            AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL ? DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY day DESC
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, days);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String day = rs.getString("day");
+                    BigDecimal revenue = rs.getBigDecimal("revenue");
+                    revenueMap.put(day, revenue);
+                }
+            }
+        }
+        
+        return revenueMap;
+    }
+    
+    /**
+     * Lấy top sản phẩm bán chạy (theo số lượng đã bán)
+     */
+    public List<Map<String, Object>> getTopProducts(int limit) throws SQLException {
+        List<Map<String, Object>> products = new ArrayList<>();
+        String sql = """
+            SELECT 
+                o.product_name,
+                o.provider_name,
+                SUM(o.quantity) as total_quantity,
+                COUNT(DISTINCT o.order_id) as order_count,
+                SUM(o.total_amount) as total_revenue
+            FROM orders o
+            WHERE o.status = 'COMPLETED' AND o.is_deleted = 0
+            GROUP BY o.product_name, o.provider_name
+            ORDER BY total_quantity DESC
+            LIMIT ?
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, limit);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> product = new HashMap<>();
+                    product.put("productName", rs.getString("product_name"));
+                    product.put("providerName", rs.getString("provider_name"));
+                    product.put("totalQuantity", rs.getInt("total_quantity"));
+                    product.put("orderCount", rs.getInt("order_count"));
+                    product.put("totalRevenue", rs.getBigDecimal("total_revenue"));
+                    products.add(product);
+                }
+            }
+        }
+        
+        return products;
+    }
+    
+    /**
+     * Lấy top khách hàng (theo tổng chi tiêu)
+     */
+    public List<Map<String, Object>> getTopCustomers(int limit) throws SQLException {
+        List<Map<String, Object>> customers = new ArrayList<>();
+        String sql = """
+            SELECT 
+                u.user_id,
+                u.username,
+                u.full_name,
+                u.email,
+                COUNT(DISTINCT o.order_id) as total_orders,
+                COALESCE(SUM(o.total_amount), 0) as total_spent
+            FROM users u
+            LEFT JOIN orders o ON u.user_id = o.user_id AND o.status = 'COMPLETED' AND o.is_deleted = 0
+            WHERE u.role = 'CUSTOMER' AND u.is_deleted = 0
+            GROUP BY u.user_id, u.username, u.full_name, u.email
+            HAVING total_spent > 0
+            ORDER BY total_spent DESC
+            LIMIT ?
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, limit);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> customer = new HashMap<>();
+                    customer.put("userId", rs.getInt("user_id"));
+                    customer.put("username", rs.getString("username"));
+                    customer.put("fullName", rs.getString("full_name"));
+                    customer.put("email", rs.getString("email"));
+                    customer.put("totalOrders", rs.getInt("total_orders"));
+                    customer.put("totalSpent", rs.getBigDecimal("total_spent"));
+                    customers.add(customer);
+                }
+            }
+        }
+        
+        return customers;
+    }
+    
+    /**
+     * Lấy số lượng đơn hàng theo tháng (N tháng gần nhất)
+     */
+    public Map<String, Integer> getOrdersByMonth(int months) throws SQLException {
+        Map<String, Integer> ordersMap = new HashMap<>();
+        String sql = """
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month,
+                COUNT(*) as order_count
+            FROM orders
+            WHERE is_deleted = 0
+            AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month DESC
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, months);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String month = rs.getString("month");
+                    int count = rs.getInt("order_count");
+                    ordersMap.put(month, count);
+                }
+            }
+        }
+        
+        return ordersMap;
+    }
+    
+    /**
+     * Lấy số lượng người dùng mới theo tháng (N tháng gần nhất)
+     */
+    public Map<String, Integer> getNewUsersByMonth(int months) throws SQLException {
+        Map<String, Integer> usersMap = new HashMap<>();
+        String sql = """
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month,
+                COUNT(*) as user_count
+            FROM users
+            WHERE role = 'CUSTOMER' AND is_deleted = 0
+            AND created_at >= DATE_SUB(CURRENT_DATE, INTERVAL ? MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month DESC
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, months);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String month = rs.getString("month");
+                    int count = rs.getInt("user_count");
+                    usersMap.put(month, count);
+                }
+            }
+        }
+        
+        return usersMap;
     }
 }
 
