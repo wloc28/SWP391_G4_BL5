@@ -29,3 +29,4 @@ WHERE is_deleted = 0
 ON DUPLICATE KEY UPDATE status = 'ACTIVE';
 
 
+

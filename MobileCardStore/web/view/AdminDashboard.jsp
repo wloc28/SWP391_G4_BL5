@@ -504,6 +504,12 @@
                             <span>Quản lý đơn hàng</span>
                         </a>
                     </li>
+                    <li class="sidebar-menu-item">
+                        <a href="${pageContext.request.contextPath}/admin/provider-import">
+                            <i class="bi bi-cart"></i>
+                            <span>Nhập hàng </span>
+                        </a>
+                    </li>
                 </ul>
             </div>
             
