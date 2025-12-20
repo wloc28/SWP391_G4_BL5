@@ -212,7 +212,7 @@
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/pklist"><i class="bi bi-archive me-2"></i>Storage list</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/vlist"><i class="bi bi-ticket-perforated me-2"></i>Voucher list</a></li>
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/sliderslist"><i class="bi bi-cart me-2"></i>Order list</a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders"><i class="bi bi-cart me-2"></i>Order list</a></li>
                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/transactions"><i class="bi bi-wallet2 me-2"></i>Transactions list</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>

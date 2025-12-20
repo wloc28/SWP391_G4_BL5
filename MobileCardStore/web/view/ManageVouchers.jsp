@@ -279,7 +279,7 @@
                                 <div class="col-md-3">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-primary w-100">
+                                        <button type="submit" class="btn btn-primary w-100">
                                             <i class="bi bi-search"></i> Tìm kiếm
                                         </button>
                                         <a href="${pageContext.request.contextPath}/vlist" class="btn btn-secondary">
