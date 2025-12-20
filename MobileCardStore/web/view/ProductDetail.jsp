@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html>
     <head>
@@ -151,6 +152,180 @@
                         </div>
                     </div>
                 </c:if>
+                
+                <!-- Feedback Section -->
+                <c:if test="${not empty product}">
+                    <div class="max-w-6xl mx-auto mt-8">
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                            <h2 class="text-xl font-bold text-gray-900 mb-4">Bình luận</h2>
+                            
+                            <!-- Error Messages -->
+                            <c:if test="${param.error == 'content_too_long'}">
+                                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <p class="text-red-800 text-sm">
+                                        <i class="bi bi-exclamation-circle"></i> 
+                                        Nội dung không được vượt quá 100 ký tự!
+                                    </p>
+                                </div>
+                            </c:if>
+                            
+                            <!-- Feedback Form (chỉ hiển thị nếu user đã đăng nhập và chưa feedback) -->
+                            <c:if test="${not empty sessionScope.user}">
+                                <c:if test="${!hasFeedbacked}">
+                                    <div class="mb-6">
+                                        <form action="${pageContext.request.contextPath}/feedback/add" method="POST">
+                                            <input type="hidden" name="productId" value="${product.productId}">
+                                            <div class="mb-3">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Đánh giá:</label>
+                                                <input type="hidden" name="rating" id="ratingValue" value="">
+                                                <div class="flex items-center gap-1" id="starRating" onmouseleave="resetStarHover()">
+                                                    <span class="text-2xl cursor-pointer text-gray-300 transition-colors star-item" 
+                                                          data-rating="1" 
+                                                          onclick="selectRating(1)"
+                                                          onmouseenter="hoverRating(1)">★</span>
+                                                    <span class="text-2xl cursor-pointer text-gray-300 transition-colors star-item" 
+                                                          data-rating="2" 
+                                                          onclick="selectRating(2)"
+                                                          onmouseenter="hoverRating(2)">★</span>
+                                                    <span class="text-2xl cursor-pointer text-gray-300 transition-colors star-item" 
+                                                          data-rating="3" 
+                                                          onclick="selectRating(3)"
+                                                          onmouseenter="hoverRating(3)">★</span>
+                                                    <span class="text-2xl cursor-pointer text-gray-300 transition-colors star-item" 
+                                                          data-rating="4" 
+                                                          onclick="selectRating(4)"
+                                                          onmouseenter="hoverRating(4)">★</span>
+                                                    <span class="text-2xl cursor-pointer text-gray-300 transition-colors star-item" 
+                                                          data-rating="5" 
+                                                          onclick="selectRating(5)"
+                                                          onmouseenter="hoverRating(5)">★</span>
+                                                </div>
+                                            </div>
+                                            <textarea name="content" rows="4" 
+                                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                                      placeholder="Nhập nội dung bình luận (không bắt buộc)"
+                                                      maxlength="100"
+                                                      oninput="updateCharCount(this, 'contentCount')"></textarea>
+                                            <div class="text-sm text-gray-500 mt-1 text-right">
+                                                <span id="contentCount">0</span>/100 ký tự
+                                            </div>
+                                            <div class="mt-3 flex justify-end">
+                                                <button type="submit" 
+                                                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                                    Gửi bình luận
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </c:if>
+                                
+                                <c:if test="${hasFeedbacked}">
+                                    <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p class="text-sm text-blue-800 mb-2">Bạn đã gửi feedback cho sản phẩm này rồi.</p>
+                                        <c:if test="${not empty currentUserFeedback}">
+                                            <form action="${pageContext.request.contextPath}/feedback/update-rating" method="POST" class="flex items-center gap-2">
+                                                <input type="hidden" name="feedbackId" value="${currentUserFeedback.feedbackId}">
+                                                <input type="hidden" name="productId" value="${product.productId}">
+                                                <input type="hidden" name="rating" id="editRatingValue" value="${currentUserFeedback.rating}">
+                                                <label class="text-sm text-gray-700">Sửa đánh giá:</label>
+                                                <div class="flex items-center gap-1" id="editStarRating" onmouseleave="resetEditStarHover()">
+                                                    <span class="text-xl cursor-pointer transition-colors edit-star-item ${currentUserFeedback.rating >= 1 ? 'text-yellow-400' : 'text-gray-300'}" 
+                                                          data-rating="1" 
+                                                          onclick="selectEditRating(1)"
+                                                          onmouseenter="hoverEditRating(1)">★</span>
+                                                    <span class="text-xl cursor-pointer transition-colors edit-star-item ${currentUserFeedback.rating >= 2 ? 'text-yellow-400' : 'text-gray-300'}" 
+                                                          data-rating="2" 
+                                                          onclick="selectEditRating(2)"
+                                                          onmouseenter="hoverEditRating(2)">★</span>
+                                                    <span class="text-xl cursor-pointer transition-colors edit-star-item ${currentUserFeedback.rating >= 3 ? 'text-yellow-400' : 'text-gray-300'}" 
+                                                          data-rating="3" 
+                                                          onclick="selectEditRating(3)"
+                                                          onmouseenter="hoverEditRating(3)">★</span>
+                                                    <span class="text-xl cursor-pointer transition-colors edit-star-item ${currentUserFeedback.rating >= 4 ? 'text-yellow-400' : 'text-gray-300'}" 
+                                                          data-rating="4" 
+                                                          onclick="selectEditRating(4)"
+                                                          onmouseenter="hoverEditRating(4)">★</span>
+                                                    <span class="text-xl cursor-pointer transition-colors edit-star-item ${currentUserFeedback.rating >= 5 ? 'text-yellow-400' : 'text-gray-300'}" 
+                                                          data-rating="5" 
+                                                          onclick="selectEditRating(5)"
+                                                          onmouseenter="hoverEditRating(5)">★</span>
+                                                </div>
+                                                <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                                    Cập nhật
+                                                </button>
+                                            </form>
+                                        </c:if>
+                                    </div>
+                                </c:if>
+                            </c:if>
+                            
+                            <!-- Feedback List -->
+                            <div class="space-y-6">
+                                <c:forEach var="feedback" items="${feedbacks}">
+                                    <div class="border-b border-gray-200 pb-6 last:border-b-0">
+                                        <div class="flex items-start gap-3">
+                                            <!-- Avatar -->
+                                            <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                                                <c:choose>
+                                                    <c:when test="${not empty feedback.user.image}">
+                                                        <img src="${feedback.user.image}" alt="${feedback.user.fullName}" class="w-full h-full object-cover">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="text-gray-600 font-semibold">${fn:substring(feedback.user.fullName, 0, 1)}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                            
+                                            <div class="flex-1">
+                                                <!-- User Info -->
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="font-semibold text-gray-900">${feedback.user.fullName}</span>
+                                                    <c:if test="${not empty feedback.rating}">
+                                                        <span class="text-sm text-yellow-600 font-medium">
+                                                            ${feedback.rating}/5 ⭐
+                                                        </span>
+                                                    </c:if>
+                                                    <c:if test="${hasPurchasedMap[feedback.userId]}">
+                                                        <span class="inline-flex items-center gap-1 text-xs text-green-600">
+                                                            Đã mua sản phẩm
+                                                        </span>
+                                                    </c:if>
+                                                </div>
+                                                
+                                                <!-- Timestamp -->
+                                                <p class="text-xs text-gray-500 mb-2">
+                                                    Bình luận vào <fmt:formatDate value="${feedback.createdAt}" pattern="yyyy-MM-dd HH:mm:ss" />
+                                                </p>
+                                                
+                                                <!-- Content -->
+                                                <c:if test="${not empty feedback.content}">
+                                                    <p class="text-gray-700 mb-3">${feedback.content}</p>
+                                                </c:if>
+                                                
+                                                <!-- Admin Reply (nếu có) -->
+                                                <c:if test="${not empty feedback.adminReply}">
+                                                    <div class="mt-3 ml-4 pl-4 border-l-2 border-blue-300 bg-blue-50 rounded p-3">
+                                                        <div class="flex items-center gap-2 mb-1">
+                                                            <span class="font-semibold text-sm text-blue-900">CSKH</span>
+                                                        </div>
+                                                        <p class="text-xs text-gray-500 mb-1">
+                                                            <fmt:formatDate value="${feedback.adminReplyAt}" pattern="yyyy-MM-dd HH:mm:ss" />
+                                                        </p>
+                                                        <p class="text-sm text-gray-700">${feedback.adminReply}</p>
+                                                    </div>
+                                                </c:if>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </c:forEach>
+                                
+                                <c:if test="${empty feedbacks}">
+                                    <p class="text-gray-500 text-center py-8">Chưa có bình luận nào. Hãy là người đầu tiên bình luận!</p>
+                                </c:if>
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
             </div>
         </div>
         
@@ -167,6 +342,114 @@
                 //     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 //     body: 'productId=' + productId
                 // })
+            }
+            
+            let currentSelectedRating = 0;
+            let currentEditRating = <c:choose><c:when test="${not empty currentUserFeedback && not empty currentUserFeedback.rating}">${currentUserFeedback.rating}</c:when><c:otherwise>0</c:otherwise></c:choose>;
+            
+            // Star rating cho form feedback mới
+            function hoverRating(rating) {
+                const stars = document.querySelectorAll('#starRating .star-item');
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+            
+            function resetStarHover() {
+                const stars = document.querySelectorAll('#starRating .star-item');
+                stars.forEach((star, index) => {
+                    if (index < currentSelectedRating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+            
+            function selectRating(rating) {
+                currentSelectedRating = rating;
+                document.getElementById('ratingValue').value = rating;
+                const stars = document.querySelectorAll('#starRating .star-item');
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+            
+            // Star rating cho form sửa rating
+            function hoverEditRating(rating) {
+                const stars = document.querySelectorAll('#editStarRating .edit-star-item');
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        if (index >= currentEditRating) {
+                            star.classList.remove('text-yellow-400');
+                            star.classList.add('text-gray-300');
+                        }
+                    }
+                });
+            }
+            
+            function resetEditStarHover() {
+                const stars = document.querySelectorAll('#editStarRating .edit-star-item');
+                stars.forEach((star, index) => {
+                    if (index < currentEditRating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+            
+            function selectEditRating(rating) {
+                currentEditRating = rating;
+                document.getElementById('editRatingValue').value = rating;
+                const stars = document.querySelectorAll('#editStarRating .edit-star-item');
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+            
+            // Character counter cho feedback content
+            function updateCharCount(textarea, countId) {
+                const countElement = document.getElementById(countId);
+                if (countElement) {
+                    const currentLength = textarea.value.length;
+                    const maxLength = textarea.getAttribute('maxlength');
+                    countElement.textContent = currentLength;
+                    
+                    // Đổi màu khi gần giới hạn
+                    if (currentLength > maxLength * 0.9) {
+                        countElement.classList.add('text-red-600');
+                        countElement.classList.remove('text-gray-500');
+                    } else {
+                        countElement.classList.remove('text-red-600');
+                        countElement.classList.add('text-gray-500');
+                    }
+                }
             }
         </script>
     </body>

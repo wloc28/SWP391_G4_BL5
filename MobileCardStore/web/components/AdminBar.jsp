@@ -9,6 +9,7 @@
             <div role="separator" class="dropdown-divider"></div>
             <li class="dropdown-item"><a href="sliderslist">Order list</a></li>
             <li class="dropdown-item"><a href="registrationslist">Transactions list</a></li>
+            <li class="dropdown-item"><a href="${pageContext.request.contextPath}/admin/feedback">Feedback list</a></li>
         
     </body>
 </html>
