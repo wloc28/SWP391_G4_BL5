@@ -575,11 +575,12 @@
                             <div class="col-md-4">
                                 <label class="form-label">Tìm kiếm</label>
                                 <input type="text" class="form-control" name="search" id="searchInput" 
-                                       value="${searchTerm}" 
-                                       placeholder="ID, tên người dùng, email, sản phẩm..."
-                                       maxlength="100"
-                                       pattern="[a-zA-Z0-9@.\\s\\-+]*"
-                                       title="Chỉ được nhập chữ cái, số, @, ., khoảng trắng, - và +">
+                                    value="${searchTerm}" 
+                                    placeholder="ID, tên người dùng, email, sản phẩm..."
+                                    maxlength="100"
+                                    pattern="[a-zA-Z0-9@.\\s\\-+]*"
+                                    title="Chỉ được nhập chữ cái, số, @, ., khoảng trắng, - và +">
+                                <div class="invalid-feedback text-danger text-xs mt-1 d-none" id="searchInvalidFeedback">Vui lòng nhập ít nhất 2 ký tự hợp lệ (chứa chữ hoặc số).</div>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Trạng thái</label>
@@ -977,6 +978,56 @@
                     pageSizeSelect.addEventListener('change', function() {
                         document.getElementById('pageInput').value = 1; // Reset to page 1
                         document.getElementById('filterForm').submit();
+                    });
+                }
+                // Ensure manual price inputs are copied to hidden fields before submitting the form
+                var filterForm = document.getElementById('filterForm');
+                if (filterForm) {
+                    filterForm.addEventListener('submit', function() {
+                        var minPriceInput = document.getElementById('minPriceInput');
+                        var maxPriceInput = document.getElementById('maxPriceInput');
+                        var minHidden = document.getElementById('minPrice');
+                        var maxHidden = document.getElementById('maxPrice');
+                        if (minHidden && minPriceInput) {
+                            minHidden.value = minPriceInput.value || '';
+                        }
+                        if (maxHidden && maxPriceInput) {
+                            maxHidden.value = maxPriceInput.value || '';
+                        }
+                        // Validate search input: if non-empty, require >=2 chars and at least one alphanumeric
+                        var searchInput = document.getElementById('searchInput');
+                        var feedback = document.getElementById('searchInvalidFeedback');
+                        if (searchInput) {
+                            var v = searchInput.value.trim();
+                            if (v !== '') {
+                                // Use helper to test for Unicode letters/numbers with fallback for older browsers
+                                function containsLetterOrNumber(str) {
+                                    try {
+                                        return /[\p{L}\p{N}]/u.test(str);
+                                    } catch (e) {
+                                        // Fallback: basic Latin letters/digits + common Latin Extended range
+                                        return /[A-Za-z0-9\u00C0-\u024F]/.test(str);
+                                    }
+                                }
+                                var hasAlnum = containsLetterOrNumber(v);
+                                var hasUnderscore = /_/.test(v);
+                                if (v.length < 2 || !hasAlnum || hasUnderscore) {
+                                    // prevent submit and show message
+                                    if (feedback) {
+                                        feedback.classList.remove('d-none');
+                                    } else {
+                                        alert('Vui lòng nhập ít nhất 2 ký tự hợp lệ (chứa chữ hoặc số).');
+                                    }
+                                    searchInput.focus();
+                                    event.preventDefault();
+                                    return false;
+                                } else if (feedback) {
+                                    feedback.classList.add('d-none');
+                                }
+                            } else if (feedback) {
+                                feedback.classList.add('d-none');
+                            }
+                        }
                     });
                 }
             });
