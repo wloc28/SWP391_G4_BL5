@@ -24,6 +24,24 @@
             #passwordMatchError {
                 display: none;
             }
+            
+            .form-control.is-invalid-custom {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+            }
+            
+            .form-control.is-valid-custom {
+                border-color: #198754;
+                box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+            }
+            
+            #fullNameErrorMsg,
+            #phoneNumberErrorMsg,
+            #newPasswordErrorMsg,
+            #confirmPasswordErrorMsg,
+            #balanceErrorMsg {
+                font-size: 0.75rem;
+            }
         </style>
     </head>
     <body>
@@ -38,6 +56,8 @@
                         <c:when test="${param.error == 'update_failed'}">Cập nhật người dùng thất bại!</c:when>
                         <c:when test="${param.error == 'invalid_id'}">ID không hợp lệ!</c:when>
                         <c:when test="${param.error == 'user_not_found'}">Không tìm thấy người dùng!</c:when>
+                        <c:when test="${param.error == 'password_mismatch'}">Mật khẩu nhập lại không khớp!</c:when>
+                        <c:when test="${param.error == 'password_too_short'}">Mật khẩu phải có ít nhất 6 ký tự!</c:when>
                         <c:otherwise>${param.error}</c:otherwise>
                     </c:choose>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -58,6 +78,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <form method="post" action="${pageContext.request.contextPath}/admin/user-edit" novalidate>
+                            <input type="hidden" name="action" value="update">
                             <input type="hidden" name="userId" value="${user.userId}">
 
                             <div class="row g-3">
@@ -77,14 +98,16 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Họ tên</label>
-                                    <input type="text" class="form-control" name="fullName" value="${user.fullName}" maxlength="100">
-                                    <div class="invalid-feedback">Họ tên không được vượt quá 100 ký tự</div>
+                                    <input type="text" class="form-control" name="fullName" id="fullName" value="${user.fullName}" maxlength="100">
+                                    <div class="invalid-feedback" id="fullNameError">Họ tên không được vượt quá 100 ký tự</div>
+                                    <div class="text-danger small mt-1" id="fullNameErrorMsg" style="display: none;"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Số điện thoại</label>
-                                    <input type="tel" class="form-control" name="phoneNumber" value="${user.phoneNumber}" 
+                                    <input type="tel" class="form-control" name="phoneNumber" id="phoneNumber" value="${user.phoneNumber}" 
                                            pattern="[0-9]{10,15}" maxlength="15">
                                     <div class="invalid-feedback">Số điện thoại phải có 10-15 chữ số</div>
+                                    <div class="text-danger small mt-1" id="phoneNumberErrorMsg" style="display: none;"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Vai trò</label>
@@ -107,12 +130,14 @@
                                     <input type="password" class="form-control" name="newPassword" id="newPassword"
                                            placeholder="Nhập mật khẩu mới..." minlength="6" maxlength="100">
                                     <div class="invalid-feedback">Mật khẩu phải có ít nhất 6 ký tự</div>
+                                    <div class="text-danger small mt-1" id="newPasswordErrorMsg" style="display: none;"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Nhập lại mật khẩu mới</label>
                                     <input type="password" class="form-control" name="confirmPassword" id="confirmPassword"
                                            placeholder="Nhập lại mật khẩu mới..." minlength="6" maxlength="100">
                                     <div class="invalid-feedback" id="passwordMatchError">Mật khẩu nhập lại không khớp</div>
+                                    <div class="text-danger small mt-1" id="confirmPasswordErrorMsg" style="display: none;"></div>
                                     <small class="text-muted">Chỉ cần nhập khi thay đổi mật khẩu</small>
                                 </div>
                                 <div class="col-md-6">
@@ -132,6 +157,7 @@
                                            id="balance"
                                            value="${user.balance}">
 
+                                    <div class="text-danger small mt-1" id="balanceErrorMsg" style="display: none;"></div>
                                     <c:choose>
                                         <c:when test="${sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId}">
                                             <small class="text-muted">Bạn có thể chỉnh sửa số dư của chính mình (VND)</small>
@@ -244,11 +270,287 @@
                         });
                     }
                     
+                    // Validation functions for other fields
+                    function validateFullName(showErrors) {
+                        var fullNameInput = document.getElementById('fullName');
+                        var errorMsg = document.getElementById('fullNameErrorMsg');
+                        
+                        if (!fullNameInput || !errorMsg) return true;
+                        
+                        var value = fullNameInput.value.trim();
+                        
+                        // Reset validation state
+                        fullNameInput.classList.remove('is-invalid-custom', 'is-valid-custom');
+                        errorMsg.style.display = 'none';
+                        errorMsg.textContent = '';
+                        
+                        // If empty, no validation needed (optional field)
+                        if (!value) {
+                            return true;
+                        }
+                        
+                        // Check if only spaces
+                        if (value.replace(/\s+/g, '').length === 0) {
+                            if (showErrors) {
+                                fullNameInput.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Họ tên không được chỉ chứa khoảng trắng';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Check max length
+                        if (value.length > 100) {
+                            if (showErrors) {
+                                fullNameInput.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Họ tên không được vượt quá 100 ký tự';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Valid
+                        if (showErrors && value) {
+                            fullNameInput.classList.add('is-valid-custom');
+                        }
+                        return true;
+                    }
+                    
+                    function validatePhoneNumber(showErrors) {
+                        var phoneInput = document.getElementById('phoneNumber');
+                        var errorMsg = document.getElementById('phoneNumberErrorMsg');
+                        
+                        if (!phoneInput || !errorMsg) return true;
+                        
+                        var value = phoneInput.value.trim();
+                        
+                        // Reset validation state
+                        phoneInput.classList.remove('is-invalid-custom', 'is-valid-custom');
+                        errorMsg.style.display = 'none';
+                        errorMsg.textContent = '';
+                        
+                        // If empty, no validation needed (optional field)
+                        if (!value) {
+                            return true;
+                        }
+                        
+                        // Check if only digits
+                        if (!/^[0-9]+$/.test(value)) {
+                            if (showErrors) {
+                                phoneInput.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Số điện thoại chỉ được chứa chữ số';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Check length
+                        if (value.length < 10 || value.length > 15) {
+                            if (showErrors) {
+                                phoneInput.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Số điện thoại phải có 10-15 chữ số';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Valid
+                        if (showErrors && value) {
+                            phoneInput.classList.add('is-valid-custom');
+                        }
+                        return true;
+                    }
+                    
+                    function validateNewPassword(showErrors) {
+                        var passwordInput = document.getElementById('newPassword');
+                        var errorMsg = document.getElementById('newPasswordErrorMsg');
+                        
+                        if (!passwordInput || !errorMsg) return true;
+                        
+                        var value = passwordInput.value.trim();
+                        
+                        // Reset validation state
+                        passwordInput.classList.remove('is-invalid-custom', 'is-valid-custom');
+                        errorMsg.style.display = 'none';
+                        errorMsg.textContent = '';
+                        
+                        // If empty, no validation needed (optional field)
+                        if (!value) {
+                            return true;
+                        }
+                        
+                        // Check minimum length
+                        if (value.length < 6) {
+                            if (showErrors) {
+                                passwordInput.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Mật khẩu phải có ít nhất 6 ký tự';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Valid
+                        if (showErrors && value) {
+                            passwordInput.classList.add('is-valid-custom');
+                        }
+                        return true;
+                    }
+                    
+                    function validateBalance(showErrors) {
+                        var balanceDisplay = document.getElementById('balanceDisplay');
+                        var errorMsg = document.getElementById('balanceErrorMsg');
+                        
+                        if (!balanceDisplay || !errorMsg || balanceDisplay.readOnly) return true;
+                        
+                        var value = balanceDisplay.value.trim();
+                        
+                        // Reset validation state
+                        balanceDisplay.classList.remove('is-invalid-custom', 'is-valid-custom');
+                        errorMsg.style.display = 'none';
+                        errorMsg.textContent = '';
+                        
+                        // If empty, no validation needed
+                        if (!value || value === '0') {
+                            return true;
+                        }
+                        
+                        // Parse number (remove commas)
+                        var cleaned = value.replace(/[^\d]/g, '');
+                        var numValue = parseFloat(cleaned);
+                        
+                        // Check if valid number
+                        if (isNaN(numValue)) {
+                            if (showErrors) {
+                                balanceDisplay.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Số dư phải là một số hợp lệ';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Check if negative
+                        if (numValue < 0) {
+                            if (showErrors) {
+                                balanceDisplay.classList.add('is-invalid-custom');
+                                errorMsg.textContent = 'Số dư không được nhỏ hơn 0';
+                                errorMsg.style.display = 'block';
+                            }
+                            return false;
+                        }
+                        
+                        // Valid
+                        if (showErrors && value) {
+                            balanceDisplay.classList.add('is-valid-custom');
+                        }
+                        return true;
+                    }
+                    
+                    // Add event listeners for real-time validation (only on blur, not while typing)
+                    var fullNameInput = document.getElementById('fullName');
+                    if (fullNameInput) {
+                        fullNameInput.addEventListener('blur', function() {
+                            validateFullName(true);
+                        });
+                        fullNameInput.addEventListener('input', function() {
+                            // Clear error when user starts typing
+                            if (this.classList.contains('is-invalid-custom')) {
+                                this.classList.remove('is-invalid-custom');
+                                var errorMsg = document.getElementById('fullNameErrorMsg');
+                                if (errorMsg) {
+                                    errorMsg.style.display = 'none';
+                                }
+                            }
+                        });
+                    }
+                    
+                    var phoneInput = document.getElementById('phoneNumber');
+                    if (phoneInput) {
+                        phoneInput.addEventListener('blur', function() {
+                            validatePhoneNumber(true);
+                        });
+                        phoneInput.addEventListener('input', function() {
+                            // Clear error when user starts typing
+                            if (this.classList.contains('is-invalid-custom')) {
+                                this.classList.remove('is-invalid-custom');
+                                var errorMsg = document.getElementById('phoneNumberErrorMsg');
+                                if (errorMsg) {
+                                    errorMsg.style.display = 'none';
+                                }
+                            }
+                        });
+                    }
+                    
+                    var newPasswordInput = document.getElementById('newPassword');
+                    if (newPasswordInput) {
+                        newPasswordInput.addEventListener('blur', function() {
+                            validateNewPassword(true);
+                            // Also validate confirm password if it has value
+                            if (document.getElementById('confirmPassword').value) {
+                                validatePasswordMatch(true);
+                            }
+                        });
+                        newPasswordInput.addEventListener('input', function() {
+                            // Clear error when user starts typing
+                            if (this.classList.contains('is-invalid-custom')) {
+                                this.classList.remove('is-invalid-custom');
+                                var errorMsg = document.getElementById('newPasswordErrorMsg');
+                                if (errorMsg) {
+                                    errorMsg.style.display = 'none';
+                                }
+                            }
+                        });
+                    }
+                    
+                    var confirmPasswordInput = document.getElementById('confirmPassword');
+                    if (confirmPasswordInput) {
+                        confirmPasswordInput.addEventListener('blur', function() {
+                            validatePasswordMatch(true);
+                        });
+                        confirmPasswordInput.addEventListener('input', function() {
+                            // Clear error when user starts typing
+                            if (this.classList.contains('is-invalid-custom') || passwordMatchError) {
+                                this.classList.remove('is-invalid-custom');
+                                if (passwordMatchError) {
+                                    passwordMatchError.style.display = 'none';
+                                }
+                                var errorMsg = document.getElementById('confirmPasswordErrorMsg');
+                                if (errorMsg) {
+                                    errorMsg.style.display = 'none';
+                                }
+                            }
+                        });
+                    }
+                    
+                    var balanceDisplay = document.getElementById('balanceDisplay');
+                    if (balanceDisplay && !balanceDisplay.readOnly) {
+                        balanceDisplay.addEventListener('blur', function() {
+                            validateBalance(true);
+                        });
+                        balanceDisplay.addEventListener('input', function() {
+                            // Clear error when user starts typing
+                            if (this.classList.contains('is-invalid-custom')) {
+                                this.classList.remove('is-invalid-custom');
+                                var errorMsg = document.getElementById('balanceErrorMsg');
+                                if (errorMsg) {
+                                    errorMsg.style.display = 'none';
+                                }
+                            }
+                        });
+                    }
+                    
                     form.addEventListener('submit', function (event) {
                         formValidated = true;
                         
-                        // Validate password match before form validation
-                        if (!validatePasswordMatch(true)) {
+                        var isValid = true;
+                        
+                        // Validate all fields
+                        if (!validateFullName(true)) isValid = false;
+                        if (!validatePhoneNumber(true)) isValid = false;
+                        if (!validateNewPassword(true)) isValid = false;
+                        if (!validatePasswordMatch(true)) isValid = false;
+                        if (!validateBalance(true)) isValid = false;
+                        
+                        if (!isValid) {
                             event.preventDefault();
                             event.stopPropagation();
                             form.classList.add('was-validated');
@@ -262,6 +564,55 @@
                         form.classList.add('was-validated');
                     }, false);
                 }, false);
+            })();
+            
+            // Balance formatting
+            (function() {
+                var balanceDisplay = document.getElementById('balanceDisplay');
+                var balanceInput = document.getElementById('balance');
+                
+                if (balanceDisplay && balanceInput) {
+                    // Format number with commas
+                    function formatNumber(num) {
+                        if (!num || num === '0') return '0';
+                        // Remove all non-digit characters
+                        var cleaned = num.toString().replace(/[^\d]/g, '');
+                        if (cleaned === '' || cleaned === '0') return '0';
+                        // Add commas
+                        return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
+                    
+                    // Parse formatted number to actual number
+                    function parseNumber(formatted) {
+                        if (!formatted) return '0';
+                        var cleaned = formatted.toString().replace(/[^\d]/g, '');
+                        return cleaned === '' ? '0' : cleaned;
+                    }
+                    
+                    // Only add event listeners if field is not readonly
+                    if (!balanceDisplay.readOnly) {
+                        // Update hidden input when display input changes
+                        balanceDisplay.addEventListener('input', function() {
+                            var cleaned = parseNumber(this.value);
+                            balanceInput.value = cleaned;
+                            // Format the display
+                            this.value = formatNumber(cleaned);
+                        });
+                        
+                        // Format on blur
+                        balanceDisplay.addEventListener('blur', function() {
+                            var cleaned = parseNumber(this.value);
+                            balanceInput.value = cleaned;
+                            this.value = formatNumber(cleaned);
+                        });
+                    }
+                    
+                    // Ensure hidden input has correct value on page load
+                    if (balanceInput.value) {
+                        var currentValue = parseNumber(balanceDisplay.value);
+                        balanceInput.value = currentValue;
+                    }
+                }
             })();
         </script>
     </body>

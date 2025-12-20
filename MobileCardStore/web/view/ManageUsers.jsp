@@ -105,12 +105,10 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-3">
                                 <label class="form-label">Từ khóa</label>
-                                <input type="text" class="form-control" name="keyword" value="${keyword}" 
+                                <input type="text" class="form-control" name="keyword" id="keywordInput" value="${keyword}" 
                                        placeholder="Tên, email, sđt..." 
-                                       maxlength="50"
-                                       pattern="[a-zA-Z0-9@.\s]*" 
-                                       title="Chỉ được nhập chữ cái, số, @, . và khoảng trắng">
-                                <div class="invalid-feedback text-danger text-xs mt-1 hidden">Chỉ được nhập chữ cái, số, @, . và khoảng trắng (không quá 50 ký tự)</div>
+                                       maxlength="50">
+                                <div class="invalid-feedback text-danger text-xs mt-1 hidden" id="keywordErrorMsg">Chỉ được nhập chữ cái, số, @, ., _, -, + và khoảng trắng (không quá 50 ký tự). Nếu chỉ nhập ký tự đặc biệt sẽ không có kết quả.</div>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Vai trò</label>
@@ -271,44 +269,75 @@
                 'use strict';
                 window.addEventListener('load', function() {
                     var form = document.getElementById('filterForm');
-                    var keywordInput = document.querySelector('input[name="keyword"]');
-                    var invalidFeedback = keywordInput.nextElementSibling;
+                    var keywordInput = document.getElementById('keywordInput');
+                    var invalidFeedback = document.getElementById('keywordErrorMsg');
                     
-                    form.addEventListener('submit', function(event) {
+                    if (!keywordInput || !invalidFeedback) return;
+                    
+                    // Validation function for keyword
+                    function validateKeyword(showErrors) {
                         var keywordValue = keywordInput.value.trim();
-                        var isValid = true;
                         
                         // Reset validation state
-                        keywordInput.classList.remove('border-danger');
+                        keywordInput.classList.remove('border-danger', 'is-invalid');
                         invalidFeedback.classList.add('hidden');
+                        invalidFeedback.textContent = '';
                         
-                        // Validate keyword input - allow letters, numbers, @, ., _, %, and spaces
-                        if (keywordValue) {
-                            // Check if it's only spaces
-                            if (keywordValue.length === 0) {
-                                keywordInput.value = ''; // Clear empty spaces
-                            }
-                            // Check minimum length (at least 1 actual character)
-                            else if (keywordValue.replace(/\s+/g, '').length === 0) {
-                                keywordInput.classList.add('border-danger');
-                                invalidFeedback.textContent = 'Vui lòng nhập ít nhất một ký tự (không chỉ khoảng trắng)';
-                                invalidFeedback.classList.remove('hidden');
-                                isValid = false;
-                            }
+                        // If empty, no validation needed
+                        if (!keywordValue) {
+                            return true;
                         }
                         
-                        if (!isValid) {
+                        // Check if it's only spaces
+                        if (keywordValue.replace(/\s+/g, '').length === 0) {
+                            if (showErrors) {
+                                keywordInput.classList.add('border-danger', 'is-invalid');
+                                invalidFeedback.textContent = 'Vui lòng nhập ít nhất một ký tự (không chỉ khoảng trắng)';
+                                invalidFeedback.classList.remove('hidden');
+                            }
+                            return false;
+                        }
+                        
+                        // Check for invalid characters - allow: letters, numbers, @, ., _, -, +, and spaces
+                        // Disallow: |, %, &, <, >, ', ", \, /, and other special chars that could cause issues
+                        var invalidChars = /[^a-zA-Z0-9@.\s_\-+]/;
+                        if (invalidChars.test(keywordValue)) {
+                            if (showErrors) {
+                                keywordInput.classList.add('border-danger', 'is-invalid');
+                                invalidFeedback.textContent = 'Chỉ được nhập chữ cái, số, @, ., _, -, + và khoảng trắng';
+                                invalidFeedback.classList.remove('hidden');
+                            }
+                            return false;
+                        }
+                        
+                        // Check max length
+                        if (keywordValue.length > 50) {
+                            if (showErrors) {
+                                keywordInput.classList.add('border-danger', 'is-invalid');
+                                invalidFeedback.textContent = 'Từ khóa không được vượt quá 50 ký tự';
+                                invalidFeedback.classList.remove('hidden');
+                            }
+                            return false;
+                        }
+                        
+                        // Allow submission even if only special chars (will just return no results)
+                        // No need to validate for at least one letter/number
+                        return true;
+                    }
+                    
+                    form.addEventListener('submit', function(event) {
+                        if (!validateKeyword(true)) {
                             event.preventDefault();
                             event.stopPropagation();
                             keywordInput.focus();
+                            return false;
                         }
                     }, false);
                     
-                    // Real-time validation on input - allow all characters including _ and %
+                    // Clear error when user starts typing (no need for blur validation since we allow submission)
                     keywordInput.addEventListener('input', function() {
-                        // Reset error state when user fixes input
-                        if (this.classList.contains('border-danger')) {
-                            this.classList.remove('border-danger');
+                        if (this.classList.contains('border-danger') || this.classList.contains('is-invalid')) {
+                            this.classList.remove('border-danger', 'is-invalid');
                             invalidFeedback.classList.add('hidden');
                         }
                     });
