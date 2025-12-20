@@ -159,7 +159,7 @@ public class VoucherController extends HttpServlet {
             
             // Set attributes
             request.setAttribute("vouchers", vouchers);
-            request.setAttribute("keyword","thanh");// keyword != null ? keyword : "");
+            request.setAttribute("keyword", keyword != null ? keyword : "");
             request.setAttribute("status", status != null ? status : "ALL");
             request.setAttribute("discountType", discountType != null ? discountType : "ALL");
             request.setAttribute("expiryFilter", expiryFilter != null ? expiryFilter : "");
