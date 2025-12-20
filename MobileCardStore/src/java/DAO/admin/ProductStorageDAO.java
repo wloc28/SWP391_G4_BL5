@@ -382,12 +382,15 @@ public class ProductStorageDAO {
     }
     
     /**
-     * Lấy danh sách nhóm theo product_code (group by)
+     * Lấy danh sách nhóm theo product_code (group by) với phân trang
      * @param providerName Lọc theo nhà cung cấp (null = tất cả)
      * @param status Lọc theo trạng thái (null = tất cả)
+     * @param page Số trang (bắt đầu từ 1)
+     * @param pageSize Số bản ghi mỗi trang
      * @return Danh sách ProductStorageGroup
      */
-    public List<ProductStorageGroup> getStorageGroupsByProviderAndStatus(String providerName, String status) throws SQLException {
+    public List<ProductStorageGroup> getStorageGroupsByProviderAndStatus(String providerName, String status, 
+                                                                          int page, int pageSize) throws SQLException {
         List<ProductStorageGroup> groups = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         
@@ -406,26 +409,39 @@ public class ProductStorageDAO {
            .append("FROM product_storage ps ")
            .append("WHERE ps.is_deleted = 0 ");
         
+        List<Object> params = new ArrayList<>();
+        
         if (providerName != null && !providerName.trim().isEmpty()) {
             sql.append("AND provider_name = ? ");
+            params.add(providerName);
         }
         
         if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
             sql.append("AND status = ? ");
+            params.add(status);
         }
         
         sql.append("GROUP BY ps.product_code, ps.product_name, ps.provider_name, ps.provider_id ")
            .append("ORDER BY ps.provider_name, ps.product_code");
         
+        // Add pagination
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+            int offset = (page - 1) * pageSize;
+            params.add(pageSize);
+            params.add(offset);
+        }
+        
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             
             int paramIndex = 1;
-            if (providerName != null && !providerName.trim().isEmpty()) {
-                ps.setString(paramIndex++, providerName);
-            }
-            if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
-                ps.setString(paramIndex++, status);
+            for (Object param : params) {
+                if (param instanceof String) {
+                    ps.setString(paramIndex++, (String) param);
+                } else if (param instanceof Integer) {
+                    ps.setInt(paramIndex++, (Integer) param);
+                }
             }
             
             try (ResultSet rs = ps.executeQuery()) {
@@ -476,6 +492,47 @@ public class ProductStorageDAO {
         }
         
         return groups;
+    }
+    
+    /**
+     * Đếm tổng số storage groups (cho phân trang)
+     */
+    public int countStorageGroups(String providerName, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(DISTINCT CONCAT(ps.product_code, '_', ps.provider_id)) as total ");
+        sql.append("FROM product_storage ps ");
+        sql.append("WHERE ps.is_deleted = 0 ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        if (providerName != null && !providerName.trim().isEmpty()) {
+            sql.append("AND provider_name = ? ");
+            params.add(providerName);
+        }
+        
+        if (status != null && !status.trim().isEmpty() && !status.equals("ALL")) {
+            sql.append("AND status = ? ");
+            params.add(status);
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            
+            int paramIndex = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    ps.setString(paramIndex++, (String) param);
+                }
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        
+        return 0;
     }
     
     /**

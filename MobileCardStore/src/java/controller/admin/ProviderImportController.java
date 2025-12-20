@@ -128,22 +128,75 @@ public class ProviderImportController extends HttpServlet {
         try {
             String providerName = request.getParameter("providerName");
             
+            // Lấy tham số phân trang
+            String pageStr = request.getParameter("page");
+            String pageSizeStr = request.getParameter("pageSize");
+            
+            int page = 1;
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try {
+                    page = Integer.parseInt(pageStr);
+                    if (page < 1) page = 1;
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+            
+            int pageSize = 5; // Mặc định 5 items mỗi trang
+            if (pageSizeStr != null && !pageSizeStr.isEmpty()) {
+                try {
+                    int requestedPageSize = Integer.parseInt(pageSizeStr);
+                    // Chỉ cho phép 5, 10, hoặc 15
+                    if (requestedPageSize == 5 || requestedPageSize == 10 || requestedPageSize == 15) {
+                        pageSize = requestedPageSize;
+                    }
+                } catch (NumberFormatException e) {
+                    pageSize = 5;
+                }
+            }
+            
             // Lấy danh sách provider names
             List<String> providerNames = providerStorageDAO.getAllProviderNames();
             request.setAttribute("providerNames", providerNames);
             
-            // Lấy sản phẩm của provider được chọn hoặc tất cả
+            // Đếm tổng số sản phẩm
+            int totalCount = providerStorageDAO.countProviderStorages(providerName);
+            
+            // Tính tổng số trang
+            int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+            if (totalPages == 0) totalPages = 1;
+            if (page > totalPages) page = totalPages;
+            
+            // Lấy sản phẩm của provider được chọn hoặc tất cả với phân trang
             Map<String, List<ProviderStorage>> providerProducts;
             if (providerName != null && !providerName.isEmpty()) {
-                List<ProviderStorage> products = providerStorageDAO.getProviderStoragesByProviderName(providerName);
+                List<ProviderStorage> products = providerStorageDAO.getProviderStoragesByProviderName(providerName, page, pageSize);
                 providerProducts = new java.util.LinkedHashMap<>();
                 providerProducts.put(providerName, products);
             } else {
-                providerProducts = providerStorageDAO.getProviderStoragesGrouped();
+                // Lấy tất cả với phân trang, sau đó group lại
+                List<ProviderStorage> allProducts = providerStorageDAO.getAllProviderStorages(page, pageSize);
+                providerProducts = new java.util.LinkedHashMap<>();
+                for (ProviderStorage ps : allProducts) {
+                    String pName = ps.getProvider() != null ? ps.getProvider().getProviderName() : "Unknown";
+                    if (!providerProducts.containsKey(pName)) {
+                        providerProducts.put(pName, new java.util.ArrayList<>());
+                    }
+                    providerProducts.get(pName).add(ps);
+                }
             }
             
             request.setAttribute("providerProducts", providerProducts);
             request.setAttribute("selectedProviderName", providerName);
+            
+            // Pagination attributes
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalCount", totalCount);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("selectedPageSize", pageSizeStr != null ? pageSizeStr : "5");
+            request.setAttribute("startItem", totalCount > 0 ? (page - 1) * pageSize + 1 : 0);
+            request.setAttribute("endItem", Math.min(page * pageSize, totalCount));
             
             request.getRequestDispatcher("/view/ManageProviderImport.jsp").forward(request, response);
             
@@ -277,6 +330,33 @@ public class ProviderImportController extends HttpServlet {
             String fromDateStr = request.getParameter("fromDate");
             String toDateStr = request.getParameter("toDate");
             
+            // Lấy tham số phân trang
+            String pageStr = request.getParameter("page");
+            String pageSizeStr = request.getParameter("pageSize");
+            
+            int page = 1;
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try {
+                    page = Integer.parseInt(pageStr);
+                    if (page < 1) page = 1;
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+            
+            int pageSize = 5; // Mặc định 5 items mỗi trang
+            if (pageSizeStr != null && !pageSizeStr.isEmpty()) {
+                try {
+                    int requestedPageSize = Integer.parseInt(pageSizeStr);
+                    // Chỉ cho phép 5, 10, hoặc 15
+                    if (requestedPageSize == 5 || requestedPageSize == 10 || requestedPageSize == 15) {
+                        pageSize = requestedPageSize;
+                    }
+                } catch (NumberFormatException e) {
+                    pageSize = 5;
+                }
+            }
+            
             java.sql.Date fromDate = null;
             java.sql.Date toDate = null;
             
@@ -290,8 +370,16 @@ public class ProviderImportController extends HttpServlet {
             // Lấy danh sách provider names để hiển thị trong filter
             List<String> providerNames = providerStorageDAO.getAllProviderNames();
             
-            // Lấy lịch sử nhập hàng
-            List<ImportTransaction> history = importDAO.getImportHistory(providerName, fromDate, toDate);
+            // Đếm tổng số import transactions
+            int totalCount = importDAO.countImportHistory(providerName, fromDate, toDate);
+            
+            // Tính tổng số trang
+            int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+            if (totalPages == 0) totalPages = 1;
+            if (page > totalPages) page = totalPages;
+            
+            // Lấy lịch sử nhập hàng với phân trang
+            List<ImportTransaction> history = importDAO.getImportHistory(providerName, fromDate, toDate, page, pageSize);
             
             // Tính tổng chi phí
             java.math.BigDecimal totalCost = importDAO.getTotalImportCost(fromDate, toDate);
@@ -302,6 +390,15 @@ public class ProviderImportController extends HttpServlet {
             request.setAttribute("fromDate", fromDateStr);
             request.setAttribute("toDate", toDateStr);
             request.setAttribute("totalCost", totalCost);
+            
+            // Pagination attributes
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalCount", totalCount);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("selectedPageSize", pageSizeStr != null ? pageSizeStr : "5");
+            request.setAttribute("startItem", totalCount > 0 ? (page - 1) * pageSize + 1 : 0);
+            request.setAttribute("endItem", Math.min(page * pageSize, totalCount));
             
             request.getRequestDispatcher("/view/ImportHistory.jsp").forward(request, response);
             

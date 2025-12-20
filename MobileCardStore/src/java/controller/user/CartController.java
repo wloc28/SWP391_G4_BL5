@@ -324,17 +324,70 @@ public class CartController extends HttpServlet {
             BigDecimal discount = calculateDiscount(cart, subtotal);
             BigDecimal total = subtotal.subtract(discount);
 
+            // Lấy danh sách voucher khả dụng cho giá trị đơn hàng hiện tại
+            List<Voucher> availableVouchers = new ArrayList<>();
+            try {
+                if (subtotal != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
+                    availableVouchers = voucherDAO.getAvailableVouchersForOrder(subtotal);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Nếu có lỗi, để danh sách rỗng
+                availableVouchers = new ArrayList<>();
+            }
+
             request.setAttribute("cart", cart);
             request.setAttribute("items", items);
             request.setAttribute("subtotal", subtotal);
             request.setAttribute("discount", discount);
             request.setAttribute("total", total);
+            request.setAttribute("availableVouchers", availableVouchers);
 
             request.getRequestDispatcher("/view/Cart.jsp").forward(request, response);
 
         } catch (SQLException e) {
             e.printStackTrace();
             request.setAttribute("error", "Lỗi khi tải giỏ hàng: " + e.getMessage());
+            // Đảm bảo có các attribute cần thiết để trang không bị lỗi
+            if (request.getAttribute("cart") == null) {
+                try {
+                    User loggedInUser = getLoggedInUser(request);
+                    if (loggedInUser != null) {
+                        Cart cart = cartDAO.getOrCreateCart(loggedInUser.getUserId());
+                        request.setAttribute("cart", cart);
+                    } else {
+                        request.setAttribute("cart", null);
+                    }
+                    request.setAttribute("items", new ArrayList<>());
+                    request.setAttribute("subtotal", BigDecimal.ZERO);
+                    request.setAttribute("discount", BigDecimal.ZERO);
+                    request.setAttribute("total", BigDecimal.ZERO);
+                    request.setAttribute("availableVouchers", new ArrayList<>());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            request.getRequestDispatcher("/view/Cart.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            // Đảm bảo có các attribute cần thiết
+            try {
+                User loggedInUser = getLoggedInUser(request);
+                if (loggedInUser != null) {
+                    Cart cart = cartDAO.getOrCreateCart(loggedInUser.getUserId());
+                    request.setAttribute("cart", cart);
+                } else {
+                    request.setAttribute("cart", null);
+                }
+                request.setAttribute("items", new ArrayList<>());
+                request.setAttribute("subtotal", BigDecimal.ZERO);
+                request.setAttribute("discount", BigDecimal.ZERO);
+                request.setAttribute("total", BigDecimal.ZERO);
+                request.setAttribute("availableVouchers", new ArrayList<>());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             request.getRequestDispatcher("/view/Cart.jsp").forward(request, response);
         }
     }
@@ -380,12 +433,25 @@ public class CartController extends HttpServlet {
             BigDecimal discount = calculateDiscount(cart, subtotal);
             BigDecimal total = subtotal.subtract(discount);
 
+            // Lấy danh sách voucher khả dụng cho giá trị đơn hàng hiện tại
+            List<Voucher> availableVouchers = new ArrayList<>();
+            try {
+                if (subtotal != null && subtotal.compareTo(BigDecimal.ZERO) > 0) {
+                    availableVouchers = voucherDAO.getAvailableVouchersForOrder(subtotal);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Nếu có lỗi, để danh sách rỗng
+                availableVouchers = new ArrayList<>();
+            }
+
             request.setAttribute("cart", cart);
             request.setAttribute("items", items);
             request.setAttribute("subtotal", subtotal);
             request.setAttribute("discount", discount);
             request.setAttribute("total", total);
             request.setAttribute("user", user);
+            request.setAttribute("availableVouchers", availableVouchers);
 
             request.getRequestDispatcher("/view/CartCheckout.jsp").forward(request, response);
 

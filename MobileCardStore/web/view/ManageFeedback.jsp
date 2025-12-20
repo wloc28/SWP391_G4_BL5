@@ -93,8 +93,18 @@
                                 </select>
                             </div>
                             
+                            <!-- Số lượng/trang -->
+                            <div class="col-md-2">
+                                <label class="form-label">Số lượng/trang</label>
+                                <select name="pageSize" class="form-select" id="pageSizeSelect" onchange="this.form.submit()">
+                                    <option value="5" ${selectedPageSize == '5' || empty selectedPageSize ? 'selected' : ''}>5</option>
+                                    <option value="10" ${selectedPageSize == '10' ? 'selected' : ''}>10</option>
+                                    <option value="15" ${selectedPageSize == '15' ? 'selected' : ''}>15</option>
+                                </select>
+                            </div>
+                            
                             <!-- Buttons -->
-                            <div class="col-md-2 d-flex align-items-end">
+                            <div class="col-md-12 d-flex justify-content-end mt-3">
                                 <button type="submit" class="btn btn-primary me-2">
                                     <i class="bi bi-funnel"></i> Lọc
                                 </button>
@@ -276,6 +286,7 @@
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                             <c:url var="prevUrl" value="/admin/feedback">
                                 <c:param name="page" value="${currentPage - 1}"/>
+                                <c:param name="pageSize" value="${pageSize}"/>
                                 <c:if test="${not empty searchValue}">
                                     <c:param name="search" value="${searchValue}"/>
                                 </c:if>
@@ -305,6 +316,7 @@
                                     <li class="page-item ${i == currentPage ? 'active' : ''}">
                                         <c:url var="pageUrl" value="/admin/feedback">
                                             <c:param name="page" value="${i}"/>
+                                            <c:param name="pageSize" value="${pageSize}"/>
                                             <c:if test="${not empty searchValue}">
                                                 <c:param name="search" value="${searchValue}"/>
                                             </c:if>
@@ -331,6 +343,7 @@
                                     <li class="page-item">
                                         <c:url var="firstUrl" value="/admin/feedback">
                                             <c:param name="page" value="1"/>
+                                            <c:param name="pageSize" value="${pageSize}"/>
                                             <c:if test="${not empty searchValue}"><c:param name="search" value="${searchValue}"/></c:if>
                                             <c:if test="${not empty productIdValue}"><c:param name="productId" value="${productIdValue}"/></c:if>
                                             <c:if test="${not empty ratingValue}"><c:param name="rating" value="${ratingValue}"/></c:if>
@@ -370,6 +383,7 @@
                                     <li class="page-item">
                                         <c:url var="lastUrl" value="/admin/feedback">
                                             <c:param name="page" value="${totalPages}"/>
+                                            <c:param name="pageSize" value="${pageSize}"/>
                                             <c:if test="${not empty searchValue}"><c:param name="search" value="${searchValue}"/></c:if>
                                             <c:if test="${not empty productIdValue}"><c:param name="productId" value="${productIdValue}"/></c:if>
                                             <c:if test="${not empty ratingValue}"><c:param name="rating" value="${ratingValue}"/></c:if>
@@ -386,6 +400,7 @@
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
                             <c:url var="nextUrl" value="/admin/feedback">
                                 <c:param name="page" value="${currentPage + 1}"/>
+                                <c:param name="pageSize" value="${pageSize}"/>
                                 <c:if test="${not empty searchValue}">
                                     <c:param name="search" value="${searchValue}"/>
                                 </c:if>

@@ -48,20 +48,33 @@ public class ProviderStorageDAO {
     }
     
     /**
-     * Lấy tất cả sản phẩm của một provider cụ thể
+     * Lấy tất cả sản phẩm của một provider cụ thể với phân trang
      */
-    public List<ProviderStorage> getProviderStoragesByProviderName(String providerName) throws SQLException {
+    public List<ProviderStorage> getProviderStoragesByProviderName(String providerName, int page, int pageSize) throws SQLException {
         List<ProviderStorage> storages = new ArrayList<>();
-        String sql = "SELECT ps.*, p.provider_name " +
-                     "FROM provider_storage ps " +
-                     "INNER JOIN providers p ON ps.provider_id = p.provider_id " +
-                     "WHERE p.provider_name = ? AND ps.is_deleted = 0 AND ps.status = 'ACTIVE' " +
-                     "ORDER BY ps.price ASC";
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ps.*, p.provider_name ");
+        sql.append("FROM provider_storage ps ");
+        sql.append("INNER JOIN providers p ON ps.provider_id = p.provider_id ");
+        sql.append("WHERE p.provider_name = ? AND ps.is_deleted = 0 AND ps.status = 'ACTIVE' ");
+        sql.append("ORDER BY ps.price ASC");
+        
+        // Add pagination
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
         
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
-            stmt.setString(1, providerName);
+            int paramIndex = 1;
+            stmt.setString(paramIndex++, providerName);
+            
+            if (page > 0 && pageSize > 0) {
+                int offset = (page - 1) * pageSize;
+                stmt.setInt(paramIndex++, pageSize);
+                stmt.setInt(paramIndex++, offset);
+            }
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -71,6 +84,80 @@ public class ProviderStorageDAO {
         }
         
         return storages;
+    }
+    
+    /**
+     * Lấy tất cả sản phẩm của một provider cụ thể (không phân trang - để tương thích)
+     */
+    public List<ProviderStorage> getProviderStoragesByProviderName(String providerName) throws SQLException {
+        return getProviderStoragesByProviderName(providerName, 0, 0);
+    }
+    
+    /**
+     * Lấy tất cả sản phẩm với phân trang (không group)
+     */
+    public List<ProviderStorage> getAllProviderStorages(int page, int pageSize) throws SQLException {
+        List<ProviderStorage> storages = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ps.*, p.provider_name ");
+        sql.append("FROM provider_storage ps ");
+        sql.append("INNER JOIN providers p ON ps.provider_id = p.provider_id ");
+        sql.append("WHERE ps.is_deleted = 0 AND ps.status = 'ACTIVE' ");
+        sql.append("ORDER BY p.provider_name, ps.price ASC");
+        
+        // Add pagination
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            if (page > 0 && pageSize > 0) {
+                int offset = (page - 1) * pageSize;
+                stmt.setInt(1, pageSize);
+                stmt.setInt(2, offset);
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    storages.add(mapResultSetToProviderStorage(rs));
+                }
+            }
+        }
+        
+        return storages;
+    }
+    
+    /**
+     * Đếm tổng số provider storages
+     */
+    public int countProviderStorages(String providerName) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) as total ");
+        sql.append("FROM provider_storage ps ");
+        sql.append("INNER JOIN providers p ON ps.provider_id = p.provider_id ");
+        sql.append("WHERE ps.is_deleted = 0 AND ps.status = 'ACTIVE' ");
+        
+        if (providerName != null && !providerName.trim().isEmpty()) {
+            sql.append("AND p.provider_name = ?");
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            
+            if (providerName != null && !providerName.trim().isEmpty()) {
+                stmt.setString(1, providerName);
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        
+        return 0;
     }
     
     /**

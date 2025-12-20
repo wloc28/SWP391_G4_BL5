@@ -81,6 +81,8 @@ public class ManageFeedbackController extends HttpServlet {
             
             // Get pagination parameters
             String pageStr = request.getParameter("page");
+            String pageSizeStr = request.getParameter("pageSize");
+            
             int page = 1;
             if (pageStr != null && !pageStr.isEmpty()) {
                 try {
@@ -91,7 +93,18 @@ public class ManageFeedbackController extends HttpServlet {
                 }
             }
             
-            int pageSize = 5; // 5 feedbacks mỗi trang
+            int pageSize = 5; // Mặc định 5 feedbacks mỗi trang
+            if (pageSizeStr != null && !pageSizeStr.isEmpty()) {
+                try {
+                    int requestedPageSize = Integer.parseInt(pageSizeStr);
+                    // Chỉ cho phép 5, 10, hoặc 15
+                    if (requestedPageSize == 5 || requestedPageSize == 10 || requestedPageSize == 15) {
+                        pageSize = requestedPageSize;
+                    }
+                } catch (NumberFormatException e) {
+                    pageSize = 5;
+                }
+            }
             
             // Get total count
             int totalCount = feedbackDAO.countFeedbacks(search, productId, rating, hasReply);
@@ -120,6 +133,7 @@ public class ManageFeedbackController extends HttpServlet {
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("totalCount", totalCount);
             request.setAttribute("pageSize", pageSize);
+            request.setAttribute("selectedPageSize", pageSizeStr != null ? pageSizeStr : "5");
             request.setAttribute("startItem", totalCount > 0 ? (page - 1) * pageSize + 1 : 0);
             request.setAttribute("endItem", Math.min(page * pageSize, totalCount));
             
