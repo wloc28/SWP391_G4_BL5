@@ -187,12 +187,32 @@ public class UserManagementController extends HttpServlet {
             String role = request.getParameter("role");
             String status = request.getParameter("status");
             String balanceStr = request.getParameter("balance");
+            String newPassword = request.getParameter("newPassword");
+            String confirmPassword = request.getParameter("confirmPassword");
+
+            // Validate password if provided
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                if (!newPassword.equals(confirmPassword)) {
+                    response.sendRedirect(request.getContextPath() + "/admin/user-edit?id=" + userId + "&error=password_mismatch");
+                    return;
+                }
+                if (newPassword.length() < 6) {
+                    response.sendRedirect(request.getContextPath() + "/admin/user-edit?id=" + userId + "&error=password_too_short");
+                    return;
+                }
+                // Update password
+                userDAO.updatePassword(userId, newPassword.trim());
+            }
 
             java.math.BigDecimal balance = java.math.BigDecimal.ZERO;
             try {
-                balance = new java.math.BigDecimal(balanceStr);
-                // Làm tròn số dư (không có số thập phân)
-                balance = balance.setScale(0, java.math.RoundingMode.HALF_UP);
+                if (balanceStr != null && !balanceStr.trim().isEmpty()) {
+                    // Remove formatting (commas, spaces) before parsing
+                    String cleanBalance = balanceStr.replaceAll("[,\\s]", "");
+                    balance = new java.math.BigDecimal(cleanBalance);
+                    // Làm tròn số dư (không có số thập phân)
+                    balance = balance.setScale(0, java.math.RoundingMode.HALF_UP);
+                }
             } catch (Exception ignored) {
             }
 
@@ -208,6 +228,7 @@ public class UserManagementController extends HttpServlet {
             userDAO.updateUser(user);
             response.sendRedirect(request.getContextPath() + "/admin/users?success=update_success");
         } catch (Exception e) {
+            e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/users?error=update_failed");
         }
     }

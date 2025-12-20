@@ -29,12 +29,20 @@ public class UserDAO {
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (username LIKE ? OR email LIKE ? OR full_name LIKE ? OR phone_number LIKE ?) ");
-            String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
+            String trimmedKeyword = keyword.trim();
+            // Only apply keyword filter if it contains at least one letter or number
+            // If keyword only contains special chars, return empty result (1=0 means no match)
+            if (trimmedKeyword.matches(".*[a-zA-Z0-9].*")) {
+                sql.append("AND (username LIKE ? OR email LIKE ? OR full_name LIKE ? OR phone_number LIKE ?) ");
+                String kw = "%" + trimmedKeyword + "%";
+                params.add(kw);
+                params.add(kw);
+                params.add(kw);
+                params.add(kw);
+            } else {
+                // Keyword only contains special chars - return no results
+                sql.append("AND 1=0 ");
+            }
         }
 
         if (role != null && !role.equalsIgnoreCase("ALL") && !role.isEmpty()) {
@@ -98,12 +106,20 @@ public class UserDAO {
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (username LIKE ? OR email LIKE ? OR full_name LIKE ? OR phone_number LIKE ?) ");
-            String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
+            String trimmedKeyword = keyword.trim();
+            // Only apply keyword filter if it contains at least one letter or number
+            // If keyword only contains special chars, return empty result (1=0 means no match)
+            if (trimmedKeyword.matches(".*[a-zA-Z0-9].*")) {
+                sql.append("AND (username LIKE ? OR email LIKE ? OR full_name LIKE ? OR phone_number LIKE ?) ");
+                String kw = "%" + trimmedKeyword + "%";
+                params.add(kw);
+                params.add(kw);
+                params.add(kw);
+                params.add(kw);
+            } else {
+                // Keyword only contains special chars - return no results
+                sql.append("AND 1=0 ");
+            }
         }
 
         if (role != null && !role.equalsIgnoreCase("ALL") && !role.isEmpty()) {
@@ -216,6 +232,23 @@ public class UserDAO {
             ps.setString(6, user.getStatus());
             ps.setTimestamp(7, new Timestamp(System.currentTimeMillis()));
             ps.setInt(8, user.getUserId());
+
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Admin cập nhật mật khẩu người dùng.
+     */
+    public boolean updatePassword(int userId, String newPassword) throws SQLException {
+        String sql = "UPDATE users SET password = ?, updated_at = ? WHERE user_id = ? AND is_deleted = 0";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newPassword);
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            ps.setInt(3, userId);
 
             return ps.executeUpdate() > 0;
         }
