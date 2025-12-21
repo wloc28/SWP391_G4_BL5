@@ -190,6 +190,18 @@ public class UserManagementController extends HttpServlet {
             String newPassword = request.getParameter("newPassword");
             String confirmPassword = request.getParameter("confirmPassword");
 
+            // Ngăn không cho admin tự chỉnh sửa trạng thái của chính mình
+            HttpSession session = request.getSession(false);
+            User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+            if (currentUser != null && currentUser.getUserId() == userId) {
+                // Nếu admin đang chỉnh sửa chính mình, lấy status cũ từ database
+                User existingUser = userDAO.getUserById(userId);
+                if (existingUser != null) {
+                    // Giữ nguyên status cũ, không cho phép thay đổi
+                    status = existingUser.getStatus();
+                }
+            }
+
             // Validate password if provided
             if (newPassword != null && !newPassword.trim().isEmpty()) {
                 if (!newPassword.equals(confirmPassword)) {

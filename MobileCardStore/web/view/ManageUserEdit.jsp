@@ -119,10 +119,15 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Trạng thái</label>
-                                    <select class="form-select" name="status" required>
+                                    <select class="form-select" name="status" required
+                                            ${(sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId) ? 'disabled' : ''}>
                                         <option value="ACTIVE" ${user.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
                                         <option value="BANNED" ${user.status == 'BANNED' ? 'selected' : ''}>BANNED</option>
                                     </select>
+                                    <c:if test="${sessionScope.user.role == 'ADMIN' && sessionScope.user.userId == user.userId}">
+                                        <input type="hidden" name="status" value="${user.status}">
+                                        <small class="text-muted">Bạn không thể chỉnh sửa trạng thái của chính mình</small>
+                                    </c:if>
                                     <div class="invalid-feedback">Vui lòng chọn trạng thái</div>
                                 </div>
                                 <div class="col-md-6">
