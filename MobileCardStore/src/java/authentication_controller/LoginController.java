@@ -2,7 +2,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-
 package authentication_controller;
 
 import java.io.IOException;
@@ -20,11 +19,12 @@ import Models.User;
  *
  * @author Dell XPS
  */
-@WebServlet(name="LoginServlet", urlPatterns={"/login"})
+@WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginController extends HttpServlet {
-   
-    /** 
+
+    /**
      * Handles the HTTP <code>GET</code> method.
+     *
      * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
@@ -32,13 +32,14 @@ public class LoginController extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+            throws ServletException, IOException {
         // Forward to login page (giữ nguyên query parameters như success)
         request.getRequestDispatcher("/view/login.jsp").forward(request, response);
-    } 
+    }
 
-    /** 
+    /**
      * Handles the HTTP <code>POST</code> method.
+     *
      * @param request servlet request
      * @param response servlet response
      * @throws ServletException if a servlet-specific error occurs
@@ -46,25 +47,32 @@ public class LoginController extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+            throws ServletException, IOException {
         // Get parameters from form
-                              String email = request.getParameter("user");
+        String email = request.getParameter("user");
         String password = request.getParameter("pass");
-        
+
         // Validate input
-        if (email == null || email.trim().isEmpty() || 
-            password == null || password.trim().isEmpty()) {
+        if (email == null || email.trim().isEmpty()
+                || password == null || password.trim().isEmpty()) {
             request.setAttribute("passmsg", "Email và mật khẩu không được để trống!");
             request.setAttribute("userEmail", email != null ? email : "");
             request.getRequestDispatcher("/view/login.jsp").forward(request, response);
             return;
         }
-        
+
         // Attempt login
         daoUser customerLogin = new daoUser();
         User user = customerLogin.login(email.trim(), password);
-        
+
         if (user != null) {
+            if (user.getStatus() != null && !user.getStatus().equalsIgnoreCase("ACTIVE")) {
+                // BANNED user
+                request.setAttribute("passmsg", "Tài khoản của bạn đã bị khóa.");
+                request.setAttribute("userEmail", email);
+                request.getRequestDispatcher("/view/login.jsp").forward(request, response);
+                return;
+            }
             // Login successful
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
@@ -72,7 +80,7 @@ public class LoginController extends HttpServlet {
             session.setAttribute("username", user.getUsername());
             session.setAttribute("email", user.getEmail());
             session.setAttribute("role", user.getRole());
-            
+
             // Redirect based on role
             String role = user.getRole();
             if (role != null && role.equalsIgnoreCase("ADMIN")) {
@@ -83,15 +91,25 @@ public class LoginController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/home");
             }
         } else {
-            // Login failed
-            request.setAttribute("passmsg", "Email hoặc mật khẩu không đúng!");
+            // Login failed - kiểm tra xem user có tồn tại nhưng bị BANNED không
+            daoUser userDao = new daoUser();
+            User checkUser = userDao.getUserByEmail(email.trim());
+            
+            if (checkUser != null && "BANNED".equalsIgnoreCase(checkUser.getStatus())) {
+                // Tài khoản bị khóa
+                request.setAttribute("passmsg", "Tài khoản của bạn đã bị khóa.");
+            } else {
+                // Sai email hoặc mật khẩu
+                request.setAttribute("passmsg", "Email hoặc mật khẩu không đúng!");
+            }
             request.setAttribute("userEmail", email);
             request.getRequestDispatcher("/view/login.jsp").forward(request, response);
         }
     }
 
-    /** 
+    /**
      * Returns a short description of the servlet.
+     *
      * @return a String containing servlet description
      */
     @Override

@@ -19,7 +19,7 @@ import java.sql.SQLException;
 public class daoUser {
     public User login(String email, String password) {
     // 1. Truy vấn SQL không đổi
-    String sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+    String sql = "SELECT * FROM users WHERE email = ? AND password = ? AND status = 'ACTIVE' AND is_deleted = 0";
     
     try (Connection conn = DBConnection.getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -29,7 +29,7 @@ public class daoUser {
         
         try (ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                // Đăng nhập thành công, ánh xạ dữ liệu trực tiếp
+                // Đăng nhập thành công
                 User user = new User();
                 
                 
@@ -93,6 +93,37 @@ public class daoUser {
         } catch (SQLException e) {
             System.err.println("Error in daoUser.getUserById: " + e.getMessage());
             e.printStackTrace();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Kiểm tra user có tồn tại theo email (không cần password)
+     * Dùng để kiểm tra status khi login thất bại
+     * @param email Email của user
+     * @return User object nếu tìm thấy, null nếu không
+     */
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ? AND is_deleted = 0";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, email);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User user = new User();
+                    user.setUserId(rs.getInt("user_id"));
+                    user.setUsername(rs.getString("username"));
+                    user.setEmail(rs.getString("email"));
+                    user.setStatus(rs.getString("status"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error in daoUser.getUserByEmail: " + e.getMessage());
         }
         
         return null;
