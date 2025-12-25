@@ -253,7 +253,27 @@
                                             <td><strong>${group.productCode}</strong></td>
                                             <td>${group.productName}</td>
                                             <td>
-                                                <fmt:formatNumber value="${group.price}" type="number" maxFractionDigits="0"/> đ
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="number" 
+                                                           class="form-control form-control-sm price-input" 
+                                                           value="<fmt:formatNumber value="${group.price}" type="number" maxFractionDigits="0" groupingUsed="false"/>" 
+                                                           data-product-code="${group.productCode}" 
+                                                           data-provider-id="${group.providerId}"
+                                                           data-original-price="<fmt:formatNumber value="${group.price}" type="number" maxFractionDigits="0" groupingUsed="false"/>"
+                                                           style="width: 120px; display: inline-block;"
+                                                           onblur="updatePrice('${group.productCode}', ${group.providerId}, this.value, this)"
+                                                           onkeypress="if(event.key === 'Enter') { this.blur(); }"
+                                                           min="0"
+                                                           max="1000000"
+                                                           step="1000">
+                                                    <span>đ</span>
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-primary" 
+                                                            onclick="editPrice('${group.productCode}', ${group.providerId})"
+                                                            title="Chỉnh sửa giá">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td>
                                                 <div>
@@ -590,6 +610,80 @@
                     "'": '&#039;'
                 };
                 return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
+            }
+            
+            function updatePrice(productCode, providerId, newPrice, inputElement) {
+                // Lấy giá gốc
+                const originalPrice = inputElement.getAttribute('data-original-price');
+                
+                // Validate giá
+                if (!newPrice || newPrice <= 0) {
+                    alert('Giá bán phải lớn hơn 0!');
+                    inputElement.value = originalPrice;
+                    return;
+                }
+                
+                // Validate giá tối đa 1.000.000
+                if (parseFloat(newPrice) > 1000000) {
+                    alert('Giá bán không được vượt quá 1.000.000 đ!');
+                    inputElement.value = originalPrice;
+                    return;
+                }
+                
+                // Kiểm tra xem giá có thay đổi không
+                if (parseFloat(newPrice) === parseFloat(originalPrice)) {
+                    return; // Không có thay đổi, không cần cập nhật
+                }
+                
+                if (!confirm('Bạn có chắc chắn muốn cập nhật giá bán cho sản phẩm ' + productCode + ' từ ' + 
+                            formatNumber(originalPrice) + ' đ thành ' + formatNumber(newPrice) + ' đ?')) {
+                    inputElement.value = originalPrice;
+                    return;
+                }
+                
+                // Disable input trong khi đang xử lý
+                inputElement.disabled = true;
+                
+                fetch('${pageContext.request.contextPath}/pklist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=updatePrice&productCode=' + encodeURIComponent(productCode) + 
+                          '&providerId=' + providerId + 
+                          '&price=' + encodeURIComponent(newPrice)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    inputElement.disabled = false;
+                    if (data.success) {
+                        alert('Cập nhật giá bán thành công!');
+                        // Cập nhật giá gốc
+                        inputElement.setAttribute('data-original-price', newPrice);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + (data.error || 'Không thể cập nhật giá bán'));
+                        inputElement.value = originalPrice;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    inputElement.disabled = false;
+                    alert('Lỗi khi cập nhật giá bán');
+                    inputElement.value = originalPrice;
+                });
+            }
+            
+            function editPrice(productCode, providerId) {
+                const input = document.querySelector(`input[data-product-code="${productCode}"][data-provider-id="${providerId}"]`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }
+            
+            function formatNumber(num) {
+                return parseFloat(num).toLocaleString('vi-VN');
             }
         </script>
         

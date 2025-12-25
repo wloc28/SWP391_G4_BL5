@@ -77,6 +77,8 @@ public class ProductStorageController extends HttpServlet {
         try {
             if ("updateStatus".equals(action)) {
                 updateProductStatus(request, response);
+            } else if ("updatePrice".equals(action)) {
+                updateProductPrice(request, response);
             } else {
                 doGet(request, response);
             }
@@ -295,6 +297,70 @@ public class ProductStorageController extends HttpServlet {
                 response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật trạng thái thành công\"}");
             } else {
                 response.getWriter().write("{\"success\": false, \"error\": \"Không thể cập nhật trạng thái\"}");
+            }
+            
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\": false, \"error\": \"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+    
+    /**
+     * Cập nhật giá bán cho tất cả sản phẩm có cùng product_code và provider_id
+     */
+    private void updateProductPrice(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String productCode = request.getParameter("productCode");
+            String providerIdStr = request.getParameter("providerId");
+            String priceStr = request.getParameter("price");
+            
+            if (productCode == null || providerIdStr == null || priceStr == null) {
+                response.getWriter().write("{\"success\": false, \"error\": \"Thiếu thông tin\"}");
+                response.setContentType("application/json");
+                return;
+            }
+            
+            int providerId = Integer.parseInt(providerIdStr);
+            java.math.BigDecimal newPrice;
+            java.math.BigDecimal maxPrice = new java.math.BigDecimal("1000000");
+            try {
+                newPrice = new java.math.BigDecimal(priceStr);
+                if (newPrice.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                    response.getWriter().write("{\"success\": false, \"error\": \"Giá bán phải lớn hơn 0\"}");
+                    response.setContentType("application/json");
+                    return;
+                }
+                if (newPrice.compareTo(maxPrice) > 0) {
+                    response.getWriter().write("{\"success\": false, \"error\": \"Giá bán không được vượt quá 1.000.000 đ\"}");
+                    response.setContentType("application/json");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                response.getWriter().write("{\"success\": false, \"error\": \"Giá bán không hợp lệ\"}");
+                response.setContentType("application/json");
+                return;
+            }
+            
+            // Lấy user ID từ session
+            HttpSession session = request.getSession();
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                user = (User) session.getAttribute("info");
+            }
+            Integer updatedBy = (user != null) ? user.getUserId() : null;
+            
+            // Update price
+            boolean success = storageDAO.updateProductPrice(productCode, providerId, newPrice, updatedBy);
+            
+            if (success) {
+                response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật giá bán thành công\"}");
+            } else {
+                response.getWriter().write("{\"success\": false, \"error\": \"Không thể cập nhật giá bán\"}");
             }
             
             response.setContentType("application/json");
