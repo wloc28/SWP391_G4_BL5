@@ -486,12 +486,7 @@
                             <span>Quản lý người dùng</span>
                         </a>
                     </li>
-                    <li class="sidebar-menu-item">
-                        <a href="${pageContext.request.contextPath}/plist">
-                            <i class="bi bi-box"></i>
-                            <span>Quản lý sản phẩm</span>
-                        </a>
-                    </li>
+                    
                     <li class="sidebar-menu-item">
                         <a href="${pageContext.request.contextPath}/pklist">
                             <i class="bi bi-archive"></i>

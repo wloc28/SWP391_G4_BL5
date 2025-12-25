@@ -804,5 +804,31 @@ public class ProductStorageDAO {
         
         return item;
     }
+    
+    /**
+     * Cập nhật giá bán cho tất cả sản phẩm có cùng product_code và provider_id
+     * Chỉ cập nhật các sản phẩm chưa bị xóa
+     */
+    public boolean updateProductPrice(String productCode, int providerId, java.math.BigDecimal newPrice, Integer updatedBy) throws SQLException {
+        String sql = """
+            UPDATE product_storage 
+            SET price = ?, 
+                updated_at = NOW() 
+            WHERE product_code = ? 
+            AND provider_id = ? 
+            AND is_deleted = 0
+            """;
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setBigDecimal(1, newPrice);
+            ps.setString(2, productCode);
+            ps.setInt(3, providerId);
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
 }
 
