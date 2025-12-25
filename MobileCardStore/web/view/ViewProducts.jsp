@@ -173,7 +173,7 @@
                             <!-- Hidden inputs -->
                             <input type="hidden" name="minPrice" id="minPrice" value="${minPrice}">
                             <input type="hidden" name="maxPrice" id="maxPrice" value="${maxPrice}">
-                            <input type="hidden" name="pageSize" value="12">
+                            <input type="hidden" name="pageSize" value="8">
                             <input type="hidden" name="page" value="1" id="pageInput">
                         </form>
                     </div>

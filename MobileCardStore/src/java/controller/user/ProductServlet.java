@@ -117,8 +117,21 @@ public class ProductServlet extends HttpServlet {
                 }
             }
 
-            // Fixed page size: 12 items per page
-            int pageSize = 12;
+            // Get page size from request parameter, default to 5
+            String pageSizeStr = request.getParameter("pageSize");
+            int pageSize = 5; // Default page size
+            if (pageSizeStr != null && !pageSizeStr.isEmpty()) {
+                try {
+                    int requestedPageSize = Integer.parseInt(pageSizeStr);
+                    // Validate: must be between 1 and 100
+                    if (requestedPageSize >= 1 && requestedPageSize <= 100) {
+                        pageSize = requestedPageSize;
+                    }
+                } catch (NumberFormatException e) {
+                    // Keep default value of 8
+                    pageSize = 5;
+                }
+            }
 
             // Get products with filters
             List<ProductDisplay> products = productDAO.searchAndFilterProducts(
